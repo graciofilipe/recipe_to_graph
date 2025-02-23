@@ -1,43 +1,64 @@
 import graphviz
 
-# Create a directed graph for the Zaalouk recipe
-zaalouk = graphviz.Digraph(comment='Zaalouk Recipe', graph_attr={'rankdir': 'TB', 'dpi':'300'})
+dot = graphviz.Digraph(comment='Zaalouk Recipe Flow')
 
-# --- Tomato Base Preparation ---
-zaalouk.attr('node', shape='box', style='filled', color='lightcoral')
+dot.attr(rankdir='TB', fontname="Arial")
 
-zaalouk.node("Tomatoes", "Peel, seed, and chop Tomatoes")
-zaalouk.node("Spices", "Gather Spices, Garlic, and Herbs")
-zaalouk.node("Combine1", "Combine Tomatoes, Olive Oil,\nSpices, Garlic, and Herbs in skillet",  shape='oval')
+with dot.subgraph(name='cluster_ingredients') as c:
+    c.attr(style='filled', color='lightgrey', label='Ingredients', fontname="Arial")
+    c.node_attr.update(style='filled', color='white', fontname="Arial")
+    c.node('Eggplants', '2 Large Eggplants', shape='rectangle')
+    c.node('Tomatoes', '2 Medium/Large Tomatoes', shape='rectangle')
+    c.node('Garlic', '6 Cloves Garlic', shape='rectangle')
+    c.node('Parsley', '2 Tbsp Fresh Parsley', shape='rectangle')
+    c.node('Cilantro', '2 Tbsp Fresh Cilantro', shape='rectangle')
+    c.node('Spices', 'Salt, Paprika, Cumin', shape='rectangle')
+    c.node('Olive Oil', '4 Tbsp Olive Oil', shape='rectangle')
+    c.node('Water', '1/4 - 1/3 Cup Water', shape='rectangle')
+    c.node('Optional', 'Cayenne Pepper, Lemon Juice', shape='rectangle')
 
-zaalouk.edge("Tomatoes", "Combine1")
-zaalouk.edge("Spices", "Combine1")
+with dot.subgraph(name='cluster_prep') as c:
+    c.attr(style='filled', color='lightgrey', label='Preparation', fontname="Arial")
+    c.node_attr.update(style='filled', color='white', fontname="Arial")
+    c.edge_attr.update(fontname="Arial")
+    c.node('Chop_Tomatoes', 'Chop Tomatoes', shape='rectangle', fillcolor='red')
+    c.node('Press_Garlic', 'Press Garlic', shape='rectangle', fillcolor='lightyellow')
+    c.node('Chop_Parsley', 'Chop Parsley', shape='rectangle', fillcolor='green')
+    c.node('Chop_Cilantro', 'Chop Cilantro', shape='rectangle', fillcolor='green')
+    c.node('Peel_Eggplants', 'Peel Eggplants', shape='rectangle', fillcolor='purple')
+    c.node('Chop_Eggplants', 'Chop Eggplants', shape='rectangle', fillcolor='purple')
 
-# --- Eggplant Preparation ---
-zaalouk.attr('node', shape='box', style='filled', color='mediumpurple')
+    c.edge('Tomatoes', 'Chop_Tomatoes')
+    c.edge('Garlic', 'Press_Garlic')
+    c.edge('Parsley', 'Chop_Parsley')
+    c.edge('Cilantro', 'Chop_Cilantro')
+    c.edge('Eggplants', 'Peel_Eggplants')
+    c.edge('Peel_Eggplants', 'Chop_Eggplants')
 
-zaalouk.node("Eggplants", "Trim and peel Eggplants")
-zaalouk.node("ChopEggplants", "Finely chop Eggplants")
-zaalouk.node("Combine2", "Add Eggplants and Water to skillet", shape='oval')
+with dot.subgraph(name='cluster_cook') as c:
+    c.attr(style='filled', color='lightgrey', label='Cooking', fontname="Arial")
+    c.node_attr.update(style='filled', color='white', fontname="Arial", shape='oval')
+    c.edge_attr.update(fontname="Arial")
+    c.node('Combine1', 'Combine Ingredients in Skillet', shape='diamond')
+    c.node('Cook1', 'Cook 10-15 min', shape='oval')
+    c.node('Combine2', 'Stir to Combine', shape='diamond')
+    c.node('Cook2', 'Cook 15-20 min', shape='oval')
+    c.node('Reduce', 'Reduce Liquids', shape='oval')
+    c.node('Zaalouk', 'Zaalouk', shape='ellipse')
 
-zaalouk.edge("Eggplants", "ChopEggplants")
-zaalouk.edge("ChopEggplants", "Combine2")
+    c.edge('Chop_Tomatoes', 'Combine1')
+    c.edge('Press_Garlic', 'Combine1')
+    c.edge('Chop_Parsley', 'Combine1')
+    c.edge('Chop_Cilantro', 'Combine1')
+    c.edge('Spices', 'Combine1')
+    c.edge('Olive Oil', 'Combine1')
+    c.edge('Chop_Eggplants', 'Combine1')
+    c.edge('Water', 'Combine1')
+    c.edge('Combine1', 'Cook1')
+    c.edge('Cook1', 'Combine2')
+    c.edge('Combine2', 'Cook2')
+    c.edge('Optional', 'Cook2', label='add if using')
+    c.edge('Cook2', 'Reduce')
+    c.edge('Reduce', 'Zaalouk')
 
-# --- Cooking Process ---
-zaalouk.attr('node', shape='ellipse', style='filled', color='lightgreen')
-
-zaalouk.node("Cook1", "Cover and cook for 10-15 mins,\nuntil eggplant softens")
-zaalouk.node("Stir", "Stir to combine all ingredients")
-zaalouk.node("Cook2", "Add chili/cayenne (optional),\nmore water (if needed),\ncover and cook for 15-20 mins,\nuntil eggplant and tomatoes are soft")
-zaalouk.node("Reduce", "Cook uncovered to reduce liquids,\nstirring frequently,\nmash (optional)")
-zaalouk.node("Serve", "Taste, adjust seasoning, and serve with bread", shape='box')
-
-zaalouk.edge("Combine1", "Cook1")
-zaalouk.edge("Combine2", "Cook1")
-zaalouk.edge("Cook1", "Stir")
-zaalouk.edge("Stir", "Cook2")
-zaalouk.edge("Cook2", "Reduce")
-zaalouk.edge("Reduce", "Serve")
-
-# Render the graph to a file
-zaalouk.render('zaalouk_recipe', view=False, format='png')
+dot.render('zaalouk_recipe_flow', view=False, format='pdf')
