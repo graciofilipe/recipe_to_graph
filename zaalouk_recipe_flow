@@ -1,0 +1,59 @@
+// Zaalouk Recipe Flow
+digraph {
+	fontname=Arial rankdir=TB
+	subgraph cluster_ingredients {
+		node [color=white fontname=Arial style=filled]
+		color=lightgrey fontname=Arial label=Ingredients style=filled
+		Eggplants [label="2 Large Eggplants" shape=rectangle]
+		Tomatoes [label="2 Medium/Large Tomatoes" shape=rectangle]
+		Garlic [label="6 Cloves Garlic" shape=rectangle]
+		Parsley [label="2 Tbsp Fresh Parsley" shape=rectangle]
+		Cilantro [label="2 Tbsp Fresh Cilantro" shape=rectangle]
+		Spices [label="Salt, Paprika, Cumin" shape=rectangle]
+		"Olive Oil" [label="4 Tbsp Olive Oil" shape=rectangle]
+		Water [label="1/4 - 1/3 Cup Water" shape=rectangle]
+		Optional [label="Cayenne Pepper, Lemon Juice" shape=rectangle]
+	}
+	subgraph cluster_prep {
+		node [color=white fontname=Arial style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial label=Preparation style=filled
+		Chop_Tomatoes [label="Chop Tomatoes" fillcolor=red shape=rectangle]
+		Press_Garlic [label="Press Garlic" fillcolor=lightyellow shape=rectangle]
+		Chop_Parsley [label="Chop Parsley" fillcolor=green shape=rectangle]
+		Chop_Cilantro [label="Chop Cilantro" fillcolor=green shape=rectangle]
+		Peel_Eggplants [label="Peel Eggplants" fillcolor=purple shape=rectangle]
+		Chop_Eggplants [label="Chop Eggplants" fillcolor=purple shape=rectangle]
+		Tomatoes -> Chop_Tomatoes
+		Garlic -> Press_Garlic
+		Parsley -> Chop_Parsley
+		Cilantro -> Chop_Cilantro
+		Eggplants -> Peel_Eggplants
+		Peel_Eggplants -> Chop_Eggplants
+	}
+	subgraph cluster_cook {
+		node [color=white fontname=Arial shape=oval style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial label=Cooking style=filled
+		Combine1 [label="Combine Ingredients in Skillet" shape=diamond]
+		Cook1 [label="Cook 10-15 min" shape=oval]
+		Combine2 [label="Stir to Combine" shape=diamond]
+		Cook2 [label="Cook 15-20 min" shape=oval]
+		Reduce [label="Reduce Liquids" shape=oval]
+		Zaalouk [label=Zaalouk shape=ellipse]
+		Chop_Tomatoes -> Combine1
+		Press_Garlic -> Combine1
+		Chop_Parsley -> Combine1
+		Chop_Cilantro -> Combine1
+		Spices -> Combine1
+		"Olive Oil" -> Combine1
+		Chop_Eggplants -> Combine1
+		Water -> Combine1
+		Combine1 -> Cook1
+		Cook1 -> Combine2
+		Combine2 -> Cook2
+		Optional -> Cook2 [label="add if using"]
+		Cook2 -> Reduce
+		Reduce -> Zaalouk
+	}
+}

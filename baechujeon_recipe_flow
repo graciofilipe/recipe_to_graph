@@ -1,0 +1,65 @@
+// Baechujeon Recipe Flow
+digraph {
+	subgraph cluster_cabbage {
+		node [color=white fontname=Arial shape=rectangle style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial style=filled
+		Cabbage [label="6-8 Napa Cabbage Leaves" color=lightgreen]
+		Separate [label="Separate Leaves"]
+		Pound [label="Pound Stems"]
+		Cabbage -> Separate
+		Separate -> Pound
+	}
+	subgraph cluster_batter {
+		node [color=white fontname=Arial shape=rectangle style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial style=filled
+		Flour [label="1 Cup Flour"]
+		Water [label="1 Cup Water"]
+		Egg [label="1 Egg"]
+		Starch [label="2 Tbsp Potato Starch"]
+		Salt [label="1 tsp Salt"]
+		Mix [label="Mix Batter" color=lightblue shape=diamond]
+		Flour -> Mix
+		Water -> Mix
+		Egg -> Mix
+		Starch -> Mix
+		Salt -> Mix
+	}
+	subgraph cluster_sauce {
+		node [color=white fontname=Arial shape=rectangle style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial style=filled
+		"Soy Sauce" [label="Soy Sauce"]
+		Vinegar [label="White Vinegar"]
+		Sesame [label="Sesame Seeds"]
+		Gochugaru [label=Gochugaru]
+		"Mix Sauce" [label="Mix Dipping Sauce" color=lightcoral shape=diamond]
+		"Soy Sauce" -> "Mix Sauce"
+		Vinegar -> "Mix Sauce"
+		Sesame -> "Mix Sauce"
+		Gochugaru -> "Mix Sauce"
+	}
+	subgraph cluster_frying {
+		node [color=white fontname=Arial shape=oval style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial style=filled
+		"Heat Pan" [label="Heat Pan with Oil"]
+		Dip [label="Dip Cabbage in Batter" shape=diamond]
+		Fry [label="Fry Cabbage" color=orange]
+		"Heat Pan" -> Dip
+		Dip -> Fry [label="2-3 min per side"]
+		Pound -> Dip [label="add to"]
+		Mix -> Dip [label="add to"]
+	}
+	subgraph cluster_serve {
+		node [color=white fontname=Arial style=filled]
+		edge [fontname=Arial]
+		color=lightgrey fontname=Arial style=filled
+		Serve [label="Serve Warm" shape=parallelogram]
+		Cut [label="Cut to Bite Size" shape=circle]
+		Fry -> Cut
+		Cut -> Serve
+		"Mix Sauce" -> Serve [label=with]
+	}
+}
