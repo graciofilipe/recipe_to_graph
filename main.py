@@ -31,7 +31,8 @@ if __name__ == "__main__":
         input_type = "youtube"
         recipe = youtube_url
 
-    
+    print('recipe going in')
+    print(recipe)
     python_code = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
     create_python_file_from_string(python_code)
 
