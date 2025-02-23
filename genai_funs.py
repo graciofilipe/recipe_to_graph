@@ -44,11 +44,10 @@ You are a Python code generator specializing in creating process flow diagrams f
         *   Simple actions or combining actions: Edge labels (e.g., "add to", "wait", "peel and add").
     * Shape Mapping:
         *   Oval: Cooking (e.g., boiling, simmering).
-        *   Rectangle: Chopping/Cutting.
+        *   Rectangle: Ingredients.
         *   Diamond: Combining/Mixing.
-        *   Parallelogram: Baking.
-        * Circle: portioning.
-    *   Color: Indicate ingredient state (e.g., raw vs. cooked, or chopped vs whole).
+        *   Parallelogram: chopping, peeling, etc.
+    *   Color: appropriate for each node type (e.g. a tomato is red, spinach is green, etc. and cooking in high heat might be orange).
     * Use `fontname="Arial"` for all text.
 
 5.  **Logical Flow & Completeness:**
