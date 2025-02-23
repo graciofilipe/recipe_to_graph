@@ -1,4 +1,4 @@
-from genai_funs import generate
+from genai_funs import generate_graph, re_write_recipe
 from aux_funs import create_python_file_from_string
 import os
 import argparse
@@ -23,14 +23,16 @@ if __name__ == "__main__":
         input_type = "txt"
         #import text from test_recipe.txt file
         with open(args.recipe_file, "r") as f:
-            recipe = f.read()
+            pre_recipe = f.read()
+        recipe = re_write_recipe(project_id=PROJECT_ID, recipe=pre_recipe)
+
 
     elif youtube_url:
         input_type = "youtube"
         recipe = youtube_url
 
     
-    python_code = generate(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
+    python_code = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
     create_python_file_from_string(python_code)
 
     #execute the python script create_graph.py
