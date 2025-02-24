@@ -31,12 +31,14 @@ if __name__ == "__main__":
         input_type = "youtube"
         recipe = youtube_url
 
-    print('recipe going in')
-    print(recipe)
     first_pass_graph = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
+    create_python_file_from_string(first_pass_graph)
+    os.system("python create_graph.py")
+
     improved_graph = improve_graph(project_id=PROJECT_ID, recipe=recipe, graph_code=first_pass_graph)
     create_python_file_from_string(improved_graph)
+    os.system("python create_graph.py")
 
     #execute the python script create_graph.py
-    os.system("python create_graph.py")
+
     
