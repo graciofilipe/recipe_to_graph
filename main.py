@@ -20,18 +20,17 @@ if __name__ == "__main__":
     youtube_url = args.youtube_url
 
     if recipe_file:
-        input_type = "txt"
         #import text from test_recipe.txt file
         with open(args.recipe_file, "r") as f:
             pre_recipe = f.read()
-        recipe = re_write_recipe(project_id=PROJECT_ID, recipe=pre_recipe)
+        recipe = re_write_recipe(project_id=PROJECT_ID, recipe=pre_recipe, input_type="txt")
 
 
     elif youtube_url:
-        input_type = "youtube"
         recipe = youtube_url
+        recipe = re_write_recipe(project_id=PROJECT_ID, recipe=youtube_url, input_type="youtube")
 
-    first_pass_graph = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
+    first_pass_graph = generate_graph(project_id=PROJECT_ID, recipe=recipe)
     create_python_file_from_string(first_pass_graph)
     os.system("python create_graph.py")
 
@@ -39,6 +38,5 @@ if __name__ == "__main__":
     create_python_file_from_string(improved_graph)
     os.system("python create_graph.py")
 
-    #execute the python script create_graph.py
 
     

@@ -4,7 +4,7 @@ import base64
 import logging
 
 
-def re_write_recipe(project_id, recipe):
+def re_write_recipe(project_id, recipe, input_type):
     client = genai.Client(
         vertexai=True,
         project=project_id,
@@ -14,7 +14,8 @@ def re_write_recipe(project_id, recipe):
     print("runnung the re-writing agent")
 
     si_text = """
-You are Agent-1, a recipe standardization expert. Your goal is to transform a natural language recipe into a structured, action-oriented format optimized for generating a process flow diagram.  Think of it as "pre-processing" for a chef.  Your output will be used by Agent-2 to create a `graphviz` diagram, so clarity, consistency, and explicit action/dependency identification are key. Your output must be the *rewritten recipe*, not code or lengthy explanations.
+You are Agent-1, a recipe standardization expert. Your goal is to transform a natural language recipe or video recipe into a structured, action-oriented format optimized for generating a process flow diagram.  Think of it as "pre-processing" for a chef.  \
+    Your output will be used by Agent-2 to create a `graphviz` diagram, so clarity, consistency, and explicit action/dependency identification are key. Your output must be the *rewritten recipe*, not code or lengthy explanations.
 
 **Key Principles:**
 
@@ -119,12 +120,26 @@ Sauce Preparation:
 *   **Accuracy:** Faithfully represent the original recipe's intent. Don't add or change the recipe's core instructions, only its structure and clarity.
 *   **Prioritize Flow:**  Consider how the steps relate to each other and how they would be visualized in a diagram.
 """
-    text = types.Part.from_text(text=recipe)
-    parts = [text]
+    
+    
+    if input_type == "txt":
+        recipe_text = recipe
+        text = types.Part.from_text(text=recipe_text)
+        parts = [text]
+
+    if input_type == "youtube":
+        video1 = types.Part.from_uri(
+            file_uri=recipe,
+            mime_type="video/*",
+        )
+        text = types.Part.from_text(text="here is a video of the recipe:")
+        parts = [text, video1]
+    
+    
     model = "gemini-2.0-pro-exp-02-05"
     contents = [types.Content(role="user", parts=parts)]
     generate_content_config = types.GenerateContentConfig(
-        temperature=0,
+        temperature=0.2,
         top_p=1,
         seed=0,
         max_output_tokens=8048,
@@ -154,7 +169,7 @@ Sauce Preparation:
     return response.text
 
 
-def generate_graph(project_id, recipe, input_type):
+def generate_graph(project_id, recipe):
     client = genai.Client(
         vertexai=True,
         project=project_id,
@@ -218,6 +233,7 @@ You are Agent-2, a Python code generator specializing in visually clear `graphvi
 
 6.  **Graphviz Code (Specifics):**
     *   Use `graphviz.Digraph` with explicit layout and styling attributes as defined above.
+    *   Graphviz Documentation:  [https://graphviz.org/documentation/](https://graphviz.org/documentation/) - Refer to this for a full list of shapes, attributes, colors, and customization options.
     *   `import graphviz` (only this import).
     *   Use node shapes (`shape='box'`, `shape='ellipse'`) and edge styles (`style='dashed'`, `style='solid'`) as specified.
     *   Do *not* include any colors beyond basic shape and style specifications. Agent-3 will handle advanced styling if needed.
@@ -226,23 +242,14 @@ You are Agent-2, a Python code generator specializing in visually clear `graphvi
 
 """
 
-    if input_type == "txt":
-        recipe_text = recipe
-        text = types.Part.from_text(text=recipe_text)
-        parts = [text]
 
-    if input_type == "youtube":
-        video1 = types.Part.from_uri(
-            file_uri=recipe,
-            mime_type="video/*",
-        )
-        text = types.Part.from_text(text="here is a video of the recipe:")
-        parts = [text, video1]
-
+    text = types.Part.from_text(text=recipe)
+    parts = [text]
     model = "gemini-2.0-pro-exp-02-05"
     contents = [types.Content(role="user", parts=parts)]
+    tools = [types.Tool(google_search=types.GoogleSearch())]
     generate_content_config = types.GenerateContentConfig(
-        temperature=0,
+        temperature=0.2,
         top_p=1,
         seed=0,
         max_output_tokens=8048,
@@ -257,6 +264,7 @@ You are Agent-2, a Python code generator specializing in visually clear `graphvi
             ),
             types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
         ],
+        tools=tools,
         system_instruction=[types.Part.from_text(text=si_text)],
     )
 
@@ -406,8 +414,9 @@ You are Agent-3, a visual design expert and Python code refactorer for `graphviz
 
     model = "gemini-2.0-pro-exp-02-05"
     contents = [types.Content(role="user", parts=parts)]
+    tools = [types.Tool(google_search=types.GoogleSearch())]
     generate_content_config = types.GenerateContentConfig(
-        temperature=0,
+        temperature=0.2,
         top_p=1,
         seed=0,
         max_output_tokens=8048,
@@ -422,6 +431,7 @@ You are Agent-3, a visual design expert and Python code refactorer for `graphviz
             ),
             types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
         ],
+        tools=tools,
         system_instruction=[types.Part.from_text(text=si_text)],
     )
 
