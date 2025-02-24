@@ -1,80 +1,83 @@
 import graphviz
 
-dot = graphviz.Digraph(comment='Zaalouk Recipe Flow')
+dot = graphviz.Digraph(comment='Cavolo Nero and Butter Bean Soup Recipe')
+dot.graph_attr['rankdir'] = 'TB'
+dot.graph_attr['nodesep'] = '0.75'
+dot.graph_attr['ranksep'] = '1.0'
 
-dot.attr(rankdir='TB')
+ingredient_colors = {
+    'onion': '#FFFACD',
+    'carrot': '#FFDEAD',
+    'garlic': '#F0FFF0',
+    'cavolo nero': '#98FB98',
+    'butter beans': '#FAEBD7',
+    'vegetable stock': '#E0FFFF',
+    'olive oil': '#FFFFE0',
+}
+
+action_colors = {
+    'chop': '#D3D3D3',
+    'cut': '#D3D3D3',
+    'saute': '#FFA07A',
+    'cook': '#F08080',
+    'boil': '#87CEFA',
+    'blend': '#DDA0DD',
+    'season': '#FFB6C1',
+    'add': '#AFEEEE',
+    'combine': '#AFEEEE',
+    'drain': '#D3D3D3',
+    'measure': '#D3D3D3',
+}
 
 with dot.subgraph(name='cluster_ingredients') as c:
-    c.attr(style='filled', color='lightgrey', label='Ingredients', fontname="Arial")
-    c.node_attr.update(style='filled', shape='rect', fontname="Arial")
-    c.node('Eggplants', '2 Large Eggplants', color='purple')
-    c.node('Tomatoes', '2 Medium/Large Tomatoes', color='red')
-    c.node('Garlic', '6 Cloves Garlic', color='lightyellow')
-    c.node('Parsley', '2 Tbsp Fresh Parsley', color='green')
-    c.node('Cilantro', '2 Tbsp Fresh Cilantro', color='green')
-    c.node('Spices', '1 tsp Salt\n2 tsp Paprika\n2 tsp Cumin\nCayenne Pepper (optional)', color='orange')
-    c.node('Olive Oil', '4 Tbsp Olive Oil', color='yellow')
-    c.node('Water', '1/4 - 1/3 Cup Water', color='lightblue')
-    c.node('Lemon Juice', 'Lemon Juice (optional)', color='lightyellow')
+    c.attr(label='Ingredients')
+    c.attr(fontname="Helvetica")
+    c.attr(fontweight="bold")
+    c.node('Onion', '1 Onion', shape='box', style='filled', fillcolor=ingredient_colors['onion'], fontname='Helvetica')
+    c.node('Carrot', '1 Carrot', shape='box', style='filled', fillcolor=ingredient_colors['carrot'], fontname='Helvetica')
+    c.node('Garlic', '1 Garlic clove', shape='box', style='filled', fillcolor=ingredient_colors['garlic'], fontname='Helvetica')
+    c.node('Cavolo Nero', '200g Cavolo Nero', shape='box', style='filled', fillcolor=ingredient_colors['cavolo nero'], fontname='Helvetica')
+    c.node('Butter Beans', '1 Can Butter Beans', shape='box', style='filled', fillcolor=ingredient_colors['butter beans'], fontname='Helvetica')
+    c.node('Vegetable Stock', '600ml Vegetable Stock', shape='box', style='filled', fillcolor=ingredient_colors['vegetable stock'], fontname='Helvetica')
+    c.node('Olive Oil', '2 tbsp Olive Oil', shape='box', style='filled', fillcolor=ingredient_colors['olive oil'], fontname='Helvetica')
 
-with dot.subgraph(name='cluster_prep') as c:
-    c.attr(style='filled', color='lightgrey', label='Preparation', fontname="Arial")
-    c.node_attr.update(style='filled', fontname="Arial")
-    c.edge_attr.update(fontname="Arial")
 
-    c.node('Chop Tomatoes', 'Chop Tomatoes', shape='parallelogram', color='red')
-    c.edge('Tomatoes', 'Chop Tomatoes')
+with dot.subgraph(name='cluster_cooking') as c:
+    c.attr(fontname="Helvetica")
+    c.attr(fontweight="bold")
+    label = c.name.split('cluster_')[-1].replace('_', ' ').title()
+    c.attr(label=label)
 
-    c.node('Press Garlic', 'Press Garlic', shape='parallelogram', color='lightyellow')
-    c.edge('Garlic', 'Press Garlic')
+    c.node('Prepare Onion', 'Chop Onion', shape='box', style='filled', fillcolor='#FAF0E6', fontname='Helvetica')
+    c.node('Prepare Carrot', 'Cut Carrot into small cubes', shape='box', style='filled', fillcolor='#FFE4B5', fontname='Helvetica')
+    c.node('Prepare Garlic', 'Chop Garlic clove', shape='box', style='filled', fillcolor='#F5FFFA', fontname='Helvetica')
+    c.node('Prepare Cavolo Nero', 'Roughly chop leaves, finely chop stems', shape='box', style='filled', fillcolor='#C1FFC1', fontname='Helvetica')
+    c.node('Drain Butter Beans', 'Drain Butter Beans', shape='box', style='filled', fillcolor='#FAF0E6', fontname='Helvetica')
+    c.node('Saute Vegetables', 'Saute Onion, Carrot, and Garlic in Olive Oil', shape='ellipse', style='filled', fillcolor=action_colors['saute'], fontname='Helvetica')
+    c.node('Season Vegetables', 'Season with Chilli flakes, Salt, and Pepper', shape='ellipse', style='filled', fillcolor=action_colors['season'], fontname='Helvetica')
+    c.node('Cook Vegetables', 'Cook for 8-10 minutes until fragrant', shape='ellipse', style='filled', fillcolor=action_colors['cook'], fontname='Helvetica')
+    c.node('Add Ingredients', 'Add Stock and Butter Beans', shape='ellipse', style='filled', fillcolor=action_colors['add'], fontname='Helvetica')
+    c.node('Boil Soup', 'Bring to a boil', shape='ellipse', style='filled', fillcolor=action_colors['boil'], fontname='Helvetica')
+    c.node('Cook Soup 2', 'Cook for 8-10 minutes until vegetables are tender', shape='ellipse', style='filled', fillcolor=action_colors['cook'], fontname='Helvetica')
+    c.node('Blend Soup', 'Blend half of the soup mixture until smooth', shape='ellipse', style='filled', fillcolor=action_colors['blend'], fontname='Helvetica')
+    c.node('Combine Soup', 'Pour blended mixture back into pan', shape='ellipse', style='filled', fillcolor=action_colors['combine'], fontname='Helvetica')
+    c.node('Add Cavolo Nero', 'Add Cavolo Nero', shape='ellipse', style='filled', fillcolor=action_colors['add'], fontname='Helvetica')
+    c.node('Cook Soup 3', 'Cook for 5 minutes until Cavolo Nero softens', shape='ellipse', style='filled', fillcolor=action_colors['cook'], fontname='Helvetica')
 
-    c.node('Chop Parsley', 'Chop Parsley', shape='parallelogram', color='green')
-    c.edge('Parsley', 'Chop Parsley')
+dot.edge('Prepare Onion', 'Saute Vegetables', label='add to pan', arrowhead='normal', fontname='Helvetica')
+dot.edge('Prepare Carrot', 'Saute Vegetables', label='add to pan', arrowhead='normal', fontname='Helvetica')
+dot.edge('Prepare Garlic', 'Saute Vegetables', label='add to pan', arrowhead='normal', fontname='Helvetica')
+dot.edge('Saute Vegetables', 'Season Vegetables', arrowhead='normal', fontname='Helvetica')
+dot.edge('Season Vegetables','Cook Vegetables', arrowhead='normal', fontname='Helvetica')
+dot.edge('Cook Vegetables', 'Add Ingredients', label='add to', arrowhead='normal', fontname='Helvetica')
+dot.edge('Vegetable Stock', 'Add Ingredients', label='add to', arrowhead='normal', fontname='Helvetica')
+dot.edge('Butter Beans', 'Add Ingredients', label='add to', arrowhead='normal', fontname='Helvetica')
+dot.edge('Add Ingredients', 'Boil Soup', arrowhead='normal', fontname='Helvetica')
+dot.edge('Boil Soup', 'Cook Soup 2', arrowhead='normal', fontname='Helvetica')
+dot.edge('Cook Soup 2', 'Blend Soup', arrowhead='normal', fontname='Helvetica')
+dot.edge('Blend Soup', 'Combine Soup', arrowhead='normal', fontname='Helvetica')
+dot.edge('Combine Soup', 'Add Cavolo Nero', label='add to', arrowhead='normal', fontname='Helvetica')
+dot.edge('Prepare Cavolo Nero', 'Add Cavolo Nero', label='add to', arrowhead='normal', fontname='Helvetica')
+dot.edge('Add Cavolo Nero', 'Cook Soup 3', arrowhead='normal', fontname='Helvetica')
 
-    c.node('Chop Cilantro', 'Chop Cilantro', shape='parallelogram', color='green')
-    c.edge('Cilantro', 'Chop Cilantro')
-
-    c.node('Peel and Chop Eggplants', 'Peel and Chop Eggplants', shape='parallelogram', color='purple')
-    c.edge('Eggplants', 'Peel and Chop Eggplants')
-
-with dot.subgraph(name='cluster_cook') as c:
-    c.attr(style='filled', color='lightgrey', label='Cooking', fontname="Arial")
-    c.node_attr.update(style='filled', fontname="Arial", color='white')
-    c.edge_attr.update(fontname="Arial")
-
-    c.node('Combine Initial', 'Combine in Skillet/Pot', shape='diamond')
-    c.edge('Chop Tomatoes', 'Combine Initial', label='add to')
-    c.edge('Press Garlic', 'Combine Initial', label='add to')
-    c.edge('Chop Parsley', 'Combine Initial', label='add to')
-    c.edge('Chop Cilantro', 'Combine Initial', label='add to')
-    c.edge('Spices', 'Combine Initial', label='add to')
-    c.edge('Olive Oil', 'Combine Initial', label='add to')
-
-    c.node('Add Eggplants', 'Add Eggplants and Water')
-    c.edge('Combine Initial', 'Add Eggplants', label='add to')
-    c.edge('Peel and Chop Eggplants', 'Add Eggplants', label='add to')
-    c.edge('Water', 'Add Eggplants', label='add to')
-
-    c.node('Cook 1', 'Cook Covered (10-15 min)', shape='oval', color='orange')
-    c.edge('Add Eggplants', 'Cook 1')
-
-    c.node('Stir', 'Stir to Combine')
-    c.edge('Cook 1', 'Stir')
-
-    c.node('Cook 2', 'Cook Covered (15-20 min)', shape='oval', color='orange')
-    c.edge('Stir', 'Cook 2')
-    c.edge('Lemon Juice', 'Cook 2', label='add (optional)')
-
-    c.node('Reduce Liquid', 'Reduce Liquid, Stirring Frequently', shape='oval', color='orange')
-    c.edge('Cook 2', 'Reduce Liquid')
-
-    c.node('Mash', 'Mash (optional)', shape='diamond')
-    c.edge('Reduce Liquid', 'Mash')
-
-    c.node('Cook Final', 'Continue Cooking to Desired Consistency', shape='oval', color='orange')
-    c.edge('Mash', 'Cook Final')
-
-    c.node('Zaalouk', 'Zaalouk', shape='rectangle', color='brown')
-    c.edge('Cook Final', 'Zaalouk')
-
-dot.render('zaalouk_recipe_flow', view=False, format='pdf')
+dot.render("recipe_flow", view=False, format="pdf")

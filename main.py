@@ -1,4 +1,4 @@
-from genai_funs import generate_graph, re_write_recipe
+from genai_funs import generate_graph, re_write_recipe, improve_graph
 from aux_funs import create_python_file_from_string
 import os
 import argparse
@@ -33,8 +33,9 @@ if __name__ == "__main__":
 
     print('recipe going in')
     print(recipe)
-    python_code = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
-    create_python_file_from_string(python_code)
+    first_pass_graph = generate_graph(project_id=PROJECT_ID, recipe=recipe, input_type=input_type)
+    improved_graph = improve_graph(project_id=PROJECT_ID, recipe=recipe, graph_code=first_pass_graph)
+    create_python_file_from_string(improved_graph)
 
     #execute the python script create_graph.py
     os.system("python create_graph.py")
