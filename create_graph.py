@@ -1,79 +1,80 @@
 import graphviz
 
-dot = graphviz.Digraph(graph_attr={'rankdir': 'TB', 'nodesep': '0.7', 'ranksep': '1.0', 'layout': 'dot'})
+dot = graphviz.Digraph(comment='Divorciados Recipe')
+dot.graph_attr['layout'] = 'dot'
+dot.graph_attr['rankdir'] = 'TB'
+dot.graph_attr['nodesep'] = '0.7'
+dot.graph_attr['ranksep'] = '1.0'
 
-# Dough Preparation
-with dot.subgraph(name='cluster_dough_preparation') as c:
-    c.attr(label='Dough Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
-    c.node('Flour', '500g Flour', shape='ellipse', style="rounded, filled", fillcolor="lightyellow", fontname="Helvetica", fontsize="12")
-    c.node('Yeast', '7g Yeast', shape='ellipse', style="rounded, filled", fillcolor="lightyellow", fontname="Helvetica", fontsize="12")
-    c.node('Salt', '8g Salt', shape='ellipse', style="rounded, filled", fillcolor="gainsboro", fontname="Helvetica", fontsize="12")
-    c.node('Sugar', '30g Sugar', shape='ellipse', style="rounded, filled", fillcolor="lightyellow", fontname="Helvetica", fontsize="12")
-    c.node('Water', '300ml Warm Water', shape='ellipse', style="rounded, filled", fillcolor="powderblue", fontname="Helvetica", fontsize="12")
-    c.node('Oil', '20ml Olive Oil', shape='ellipse', style="rounded, filled", fillcolor="lightgoldenrod1", fontname="Helvetica", fontsize="12")
-    c.node('Combine_Dry', 'Combine Flour, Yeast, Salt, and Sugar', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Add_Wet', 'Add Water and Oil', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Mix_Dough', 'Mix until shaggy dough forms', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
-    c.node('Knead', 'Knead Dough (8-10 min)', shape='oval', style="rounded, filled", fillcolor="coral", fontname="Helvetica", fontsize="12")
-    c.node('Rise', 'Let Rise (1 hour)', shape='component', style="rounded, filled", fillcolor="lightgray", fontname="Helvetica", fontsize="12")
-    c.edge('Flour', 'Combine_Dry', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Yeast', 'Combine_Dry', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Salt', 'Combine_Dry', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Sugar', 'Combine_Dry', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Combine_Dry', 'Add_Wet', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Water', 'Add_Wet', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Oil', 'Add_Wet', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Add_Wet', 'Mix_Dough', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Mix_Dough', 'Knead', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Knead', 'Rise', style='dashed', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.node('Risen_Dough', 'Risen Dough', shape='ellipse', style="rounded, filled", fillcolor="palegoldenrod", fontname="Helvetica", fontsize="12")
-    c.edge('Rise', 'Risen_Dough', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+# --- Vegetable Cooking Subgraph ---
+with dot.subgraph(name='cluster_vegetable_cooking') as c:
+    c.attr(label='Vegetable Cooking', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    c.node('vegetables', 'Tomatillos, Tomatoes, Onion, Jalapenos, Garlic', shape='ellipse', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+    c.node('boil_veg', 'Boil Vegetables', shape='house', style="rounded, filled", fillcolor="skyblue", fontname="Helvetica", fontsize="12")
+    c.node('simmer_veg', 'Simmer (5 min)', shape='component', style="rounded, filled", fillcolor="lightgray", fontname="Helvetica", fontsize="12")
+    c.edge('vegetables', 'boil_veg', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='add to pot')
+    c.edge('boil_veg', 'simmer_veg', style='dashed', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='until covered', color='skyblue')
+    c.node('drain_veg', 'Drain Vegetables', shape='ellipse', style="rounded, filled", fillcolor="powderblue", fontname="Helvetica", fontsize="12")
+    c.edge('simmer_veg', 'drain_veg', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
-# Sauce Preparation
-with dot.subgraph(name='cluster_sauce_preparation') as c:
-    c.attr(label='Sauce Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
-    c.node('Tomatoes', '400g Crushed Tomatoes', shape='ellipse', style="rounded, filled", fillcolor="lightcoral", fontname="Helvetica", fontsize="12")
-    c.node('Oregano', '1 tsp Dried Oregano', shape='ellipse', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
-    c.node('Basil', '1/2 tsp Dried Basil', shape='ellipse', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
-    c.node('Garlic', '1/4 tsp Garlic Powder', shape='ellipse', style="rounded, filled", fillcolor="lightgoldenrodyellow", fontname="Helvetica", fontsize="12")
-    c.node('Combine_Sauce', 'Combine all sauce ingredients', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
-    c.node('Mix_Sauce', 'Mix Sauce', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
-    c.edge('Tomatoes', 'Combine_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Oregano', 'Combine_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Basil', 'Combine_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Garlic', 'Combine_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Combine_Sauce', 'Mix_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.node('Pizza_Sauce', 'Pizza Sauce', shape='ellipse', style="rounded, filled", fillcolor="tomato", fontname="Helvetica", fontsize="12")
-    c.edge('Mix_Sauce', 'Pizza_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+# --- Red Salsa Subgraph ---
+with dot.subgraph(name='cluster_red_salsa') as c:
+    c.attr(label='Red Salsa Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    c.node('red_ingredients', 'Cooked: Roma Tomatoes, 1/2 Onion, 1 Jalapeno, 1 Garlic Clove', shape='ellipse', style="rounded, filled", fillcolor="lightcoral", fontname="Helvetica", fontsize="12")
+    c.node('salt1', '1/2 tsp Salt', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.node('blend_red', 'Blend Until Smooth', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
+    c.edge('drain_veg', 'red_ingredients', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label = 'take')
+    c.edge('red_ingredients', 'blend_red', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('salt1', 'blend_red', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.node('fry_red_salsa', 'Fry Red Salsa', shape='oval', style="rounded, filled", fillcolor="tomato", fontname="Helvetica", fontsize="12")
+    c.node('olive_oil1', '1 tsp Olive Oil', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.edge('olive_oil1', 'fry_red_salsa', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('blend_red', 'fry_red_salsa', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='1 min')
+    c.node('red_salsa_bowl','Red Salsa Bowl', shape='doublecircle', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+    c.edge('fry_red_salsa','red_salsa_bowl', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='transfer to')
 
-# Pizza Assembly
-with dot.subgraph(name='cluster_pizza_assembly') as c:
-    c.attr(label='Pizza Assembly', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
-    c.node('Preheat', 'Preheat Oven to 250°C', shape='house', style="rounded, filled", fillcolor="skyblue", fontname="Helvetica", fontsize="12")
-    c.node('Punch_Down', 'Punch Down Dough', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Roll_Out', 'Roll Out Dough (12-inch circle)', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Place_Dough', 'Place Dough on Baking Sheet', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Spread_Sauce', 'Spread Sauce', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Cheese', '200g Mozzarella Cheese', shape='ellipse', style="rounded, filled", fillcolor="lemonchiffon", fontname="Helvetica", fontsize="12")
-    c.node('Add_Cheese', 'Add Cheese', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Pepperoni', '50g Pepperoni Slices', shape='ellipse', style="rounded, filled", fillcolor="lightcoral", fontname="Helvetica", fontsize="12")
-    c.node('Add_Toppings', 'Add Pepperoni and Optional Toppings', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
-    c.node('Bake', 'Bake (12-15 min)', shape='oval', style="rounded, filled", fillcolor="coral", fontname="Helvetica", fontsize="12")
-    c.node('Cool', 'Cool Slightly', shape='Mdiamond', style="rounded, filled", fillcolor="aquamarine", fontname="Helvetica", fontsize="12")
-    c.node('Slice_Serve', 'Slice and Serve', shape='doublecircle', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+# --- Green Salsa Subgraph ---
+with dot.subgraph(name='cluster_green_salsa') as c:
+    c.attr(label='Green Salsa Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    c.node('green_ingredients', 'Cooked: Tomatillos, 1/2 Onion, 1 Jalapeno, 1 Garlic Clove, Cilantro', shape='ellipse', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+    c.node('salt2', '1/2 tsp Salt', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.node('blend_green', 'Blend Until Smooth', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
+    c.edge('drain_veg', 'green_ingredients', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label = 'take')
+    c.edge('green_ingredients', 'blend_green', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('salt2', 'blend_green', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.node('fry_green_salsa', 'Fry Green Salsa', shape='oval', style="rounded, filled", fillcolor="tomato", fontname="Helvetica", fontsize="12")
+    c.node('olive_oil2', '1 tsp Olive Oil', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.edge('olive_oil2', 'fry_green_salsa', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('blend_green', 'fry_green_salsa', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='1 min')
+    c.node('green_salsa_bowl', 'Green Salsa Bowl', shape='doublecircle', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+    c.edge('fry_green_salsa', 'green_salsa_bowl', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='transfer to')
 
-    c.edge('Preheat', 'Bake', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Risen_Dough', 'Punch_Down', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Punch_Down', 'Roll_Out', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Roll_Out', 'Place_Dough', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Place_Dough', 'Spread_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Pizza_Sauce', 'Spread_Sauce', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Spread_Sauce', 'Add_Cheese', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Cheese', 'Add_Cheese', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Add_Cheese', 'Add_Toppings', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Pepperoni', 'Add_Toppings', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Add_Toppings', 'Bake', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Bake', 'Cool', style='dashed', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
-    c.edge('Cool', 'Slice_Serve', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+# --- Egg Preparation Subgraph ---
+with dot.subgraph(name='cluster_egg_prep') as c:
+    c.attr(label='Egg Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    c.node('eggs', '4 Large Eggs', shape='ellipse', style="rounded, filled", fillcolor="lightyellow", fontname="Helvetica", fontsize="12")
+    c.node('fry_eggs', 'Fry Eggs', shape='oval', style="rounded, filled", fillcolor="tomato", fontname="Helvetica", fontsize="12")
+    c.node('olive_oil3', '1 tbsp Olive Oil', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.edge('olive_oil3', 'fry_eggs', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('eggs', 'fry_eggs', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='3 min')
+
+# --- Final Assembly Subgraph ---
+with dot.subgraph(name='cluster_final_assembly') as c:
+    c.attr(label='Final Assembly', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    c.node('plate_eggs', 'Plate 2 Fried Eggs', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
+    c.edge('fry_eggs', 'plate_eggs', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.node('add_salsas', 'Add Red and Green Salsa', shape='diamond', style="rounded, filled", fillcolor="lightsalmon", fontname="Helvetica", fontsize="12")
+    c.edge('plate_eggs', 'add_salsas', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('red_salsa_bowl', 'add_salsas', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='spoon')
+    c.edge('green_salsa_bowl', 'add_salsas', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", label='spoon')
+    c.node('garnish', 'Garnish', shape='parallelogram', style="rounded, filled", fillcolor="lightblue", fontname="Helvetica", fontsize="12")
+    c.edge('add_salsas', 'garnish', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.node('cheese', 'Cotija Cheese', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.node('cilantro', 'Cilantro', shape='plaintext', style="", fontname="Helvetica", fontsize="12")
+    c.edge('cheese', 'garnish', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    c.edge('cilantro', 'garnish', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+
+    c.node('serve', 'Serve', shape='doublecircle', style="rounded, filled", fillcolor="palegreen", fontname="Helvetica", fontsize="12")
+    c.edge('garnish','serve', style='solid', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
 dot.render("recipe_flow", view=False, format="pdf")

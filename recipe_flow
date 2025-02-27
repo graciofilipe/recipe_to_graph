@@ -1,0 +1,69 @@
+// Divorciados Recipe
+digraph {
+	graph [layout=dot nodesep=0.7 rankdir=TB ranksep=1.0]
+	subgraph cluster_vegetable_cooking {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Vegetable Cooking" pencolor=gray style=dashed
+		vegetables [label="Tomatillos, Tomatoes, Onion, Jalapenos, Garlic" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		boil_veg [label="Boil Vegetables" fillcolor=skyblue fontname=Helvetica fontsize=12 shape=house style="rounded, filled"]
+		simmer_veg [label="Simmer (5 min)" fillcolor=lightgray fontname=Helvetica fontsize=12 shape=component style="rounded, filled"]
+		vegetables -> boil_veg [label="add to pot" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		boil_veg -> simmer_veg [label="until covered" arrowhead=normal arrowsize=0.7 color=skyblue fontname=Helvetica fontsize=10 penwidth=0.8 style=dashed]
+		drain_veg [label="Drain Vegetables" fillcolor=powderblue fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		simmer_veg -> drain_veg [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+	}
+	subgraph cluster_red_salsa {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Red Salsa Preparation" pencolor=gray style=dashed
+		red_ingredients [label="Cooked: Roma Tomatoes, 1/2 Onion, 1 Jalapeno, 1 Garlic Clove" fillcolor=lightcoral fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		salt1 [label="1/2 tsp Salt" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		blend_red [label="Blend Until Smooth" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		drain_veg -> red_ingredients [label=take arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		red_ingredients -> blend_red [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		salt1 -> blend_red [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		fry_red_salsa [label="Fry Red Salsa" fillcolor=tomato fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		olive_oil1 [label="1 tsp Olive Oil" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		olive_oil1 -> fry_red_salsa [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		blend_red -> fry_red_salsa [label="1 min" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		red_salsa_bowl [label="Red Salsa Bowl" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=doublecircle style="rounded, filled"]
+		fry_red_salsa -> red_salsa_bowl [label="transfer to" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+	}
+	subgraph cluster_green_salsa {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Green Salsa Preparation" pencolor=gray style=dashed
+		green_ingredients [label="Cooked: Tomatillos, 1/2 Onion, 1 Jalapeno, 1 Garlic Clove, Cilantro" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		salt2 [label="1/2 tsp Salt" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		blend_green [label="Blend Until Smooth" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		drain_veg -> green_ingredients [label=take arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		green_ingredients -> blend_green [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		salt2 -> blend_green [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		fry_green_salsa [label="Fry Green Salsa" fillcolor=tomato fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		olive_oil2 [label="1 tsp Olive Oil" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		olive_oil2 -> fry_green_salsa [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		blend_green -> fry_green_salsa [label="1 min" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		green_salsa_bowl [label="Green Salsa Bowl" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=doublecircle style="rounded, filled"]
+		fry_green_salsa -> green_salsa_bowl [label="transfer to" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+	}
+	subgraph cluster_egg_prep {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Egg Preparation" pencolor=gray style=dashed
+		eggs [label="4 Large Eggs" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		fry_eggs [label="Fry Eggs" fillcolor=tomato fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		olive_oil3 [label="1 tbsp Olive Oil" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		olive_oil3 -> fry_eggs [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		eggs -> fry_eggs [label="3 min" arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+	}
+	subgraph cluster_final_assembly {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Final Assembly" pencolor=gray style=dashed
+		plate_eggs [label="Plate 2 Fried Eggs" fillcolor=lightblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		fry_eggs -> plate_eggs [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		add_salsas [label="Add Red and Green Salsa" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		plate_eggs -> add_salsas [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		red_salsa_bowl -> add_salsas [label=spoon arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		green_salsa_bowl -> add_salsas [label=spoon arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		garnish [label=Garnish fillcolor=lightblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		add_salsas -> garnish [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		cheese [label="Cotija Cheese" fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		cilantro [label=Cilantro fontname=Helvetica fontsize=12 shape=plaintext style=""]
+		cheese -> garnish [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		cilantro -> garnish [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+		serve [label=Serve fillcolor=palegreen fontname=Helvetica fontsize=12 shape=doublecircle style="rounded, filled"]
+		garnish -> serve [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8 style=solid]
+	}
+}

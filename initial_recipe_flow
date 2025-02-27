@@ -1,0 +1,68 @@
+// Buddha's Delight Recipe
+digraph {
+	graph [nodesep=0.75 rankdir=TB ranksep=1]
+	subgraph cluster_initial_stir_fry {
+		label="Initial Stir-Fry"
+		oil [label="Canola Oil (2 tbsp)" shape=ellipse]
+		ginger [label="Fresh Ginger (3 slices)" shape=ellipse]
+		stir_fry1 [label="Heat oil and ginger
+Caramelize ginger (30 sec)" shape=box]
+		oil -> stir_fry1 [label="add to wok" style=solid]
+		ginger -> stir_fry1 [label="add to wok" style=solid]
+		bean_curd [label="Red Fermented Bean Curd (3 tbsp)" shape=ellipse]
+		stir_fry2 [label="Add bean curd
+Break up bean curd" shape=box]
+		stir_fry1 -> stir_fry2 [style=solid]
+		bean_curd -> stir_fry2 [label="add to wok" style=solid]
+		garlic [label="Sliced Garlic (3 cloves)" shape=ellipse]
+		leek_white [label="Leek Whites (2-inch pieces)" shape=ellipse]
+		mushrooms [label="Sliced Shiitake Mushrooms" shape=ellipse]
+		wood_ears [label="Soaked Wood Ears (1 cup)" shape=ellipse]
+		stir_fry3 [label="Add garlic, leek whites, mushrooms, wood ears
+Stir-fry (1 min)" shape=box]
+		stir_fry2 -> stir_fry3 [style=solid]
+		garlic -> stir_fry3 [label="add to wok" style=solid]
+		leek_white -> stir_fry3 [label="add to wok" style=solid]
+		mushrooms -> stir_fry3 [label="add to wok" style=solid]
+		wood_ears -> stir_fry3 [label="add to wok" style=solid]
+		wine [label="Shaoxing Wine (2 tbsp)" shape=ellipse]
+		stir_fry4 [label="Add Shaoxing wine
+Stir-fry (1 min)" shape=box]
+		stir_fry3 -> stir_fry4 [style=solid]
+		wine -> stir_fry4 [label="add to wok" style=solid]
+	}
+	subgraph cluster_vegetable_tofu {
+		label="Vegetable and Tofu Addition"
+		cabbage [label="Napa Cabbage (3 cups)" shape=ellipse]
+		tofu [label="Fried Tofu Puffs (1 cup)" shape=ellipse]
+		bean_threads [label="Dried Bean Threads" shape=ellipse]
+		stir_fry5 [label="Add cabbage, tofu puffs, bean threads
+Stir-fry (2 min)" shape=box]
+		cabbage -> stir_fry5 [label="add to wok" style=solid]
+		tofu -> stir_fry5 [label="add to wok" style=solid]
+		bean_threads -> stir_fry5 [label="add to wok" style=solid]
+		leek_green [label="Leek Greens (2-inch pieces)" shape=ellipse]
+		sesame_oil [label="Sesame Oil (1 tsp)" shape=ellipse]
+		soy_sauce [label="Soy Sauce (2 tbsp)" shape=ellipse]
+		stock [label="Water/Vegetable Stock (1 cup)" shape=ellipse]
+		stir_fry6 [label="Add leek greens, sesame oil, soy sauce, stock
+Stir to combine" shape=box]
+		leek_green -> stir_fry6 [label="add to wok" style=solid]
+		sesame_oil -> stir_fry6 [label="add to wok" style=solid]
+		soy_sauce -> stir_fry6 [label="add to wok" style=solid]
+		stock -> stir_fry6 [label="add to wok" style=solid]
+		cook [label="Cover and cook (6 min)" shape=box]
+		stir_fry6 -> cook [label="reduce heat" style=dashed]
+	}
+	subgraph cluster_final_cooking {
+		label="Final Cooking"
+		mung_bean_noodles [label="Mung Bean Noodles" shape=ellipse]
+		stir_fry7 [label="Add mung bean noodles
+Stir until liquid evaporates" shape=box]
+		mung_bean_noodles -> stir_fry7 [label="add to wok" style=solid]
+		serve [label="Serve with steamed rice" shape=box]
+		stir_fry7 -> serve [style=solid]
+	}
+	stir_fry4 -> cluster_vegetable_tofu [style=solid]
+	cook -> cluster_final_cooking [style=solid]
+}
