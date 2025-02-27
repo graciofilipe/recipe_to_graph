@@ -33,6 +33,7 @@ if __name__ == "__main__":
     first_pass_graph = generate_graph(project_id=PROJECT_ID, recipe=recipe)
     create_python_file_from_string(first_pass_graph)
     os.system("python create_graph.py")
+    os.system("rm create_graph.py")
 
     improved_graph = improve_graph(project_id=PROJECT_ID, recipe=recipe, graph_code=first_pass_graph)
     create_python_file_from_string(improved_graph)
