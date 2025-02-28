@@ -1,8 +1,7 @@
-from google import genai
-from google.genai import types
 import base64
 import logging
-
+from google import genai
+from google.genai import types
 
 def re_write_recipe(project_id, recipe, input_type):
     client = genai.Client(
@@ -123,8 +122,7 @@ Sauce Preparation:
 *   **Accuracy:** Faithfully represent the original recipe's intent. Don't add or change the recipe's core instructions, only its structure and clarity.
 *   **Prioritize Flow:**  Consider how the steps relate to each other and how they would be visualized in a diagram.
 """
-    
-    
+
     if input_type == "txt":
         recipe_text = recipe
         text = types.Part.from_text(text=recipe_text)
@@ -137,8 +135,7 @@ Sauce Preparation:
         )
         text = types.Part.from_text(text="here is a video of the recipe:")
         parts = [text, video1]
-    
-    
+
     model = "gemini-2.0-pro-exp-02-05"
     contents = [types.Content(role="user", parts=parts)]
     generate_content_config = types.GenerateContentConfig(
@@ -166,7 +163,7 @@ Sauce Preparation:
         config=generate_content_config,
     )
 
-    print('The re-written recipe is:')
+    print("The re-written recipe is:")
     print(response.text)
 
     return response.text
@@ -178,7 +175,7 @@ def generate_graph(project_id, recipe):
         project=project_id,
         location="us-central1",
     )
-    print('running the graph generation agent')
+    print("running the graph generation agent")
 
     si_text = """
 
@@ -250,7 +247,6 @@ You are Agent-2, a Python code generator specializing in visually clear `graphvi
 
 """
 
-
     text = types.Part.from_text(text=recipe)
     parts = [text]
     model = "gemini-2.0-pro-exp-02-05"
@@ -282,14 +278,9 @@ You are Agent-2, a Python code generator specializing in visually clear `graphvi
         config=generate_content_config,
     )
 
-    print('finished the first graph generation agent')
-
+    print("finished the first graph generation agent")
 
     return response.text
-
-
-
-
 
 
 def improve_graph(project_id, recipe, graph_code):
@@ -299,9 +290,9 @@ def improve_graph(project_id, recipe, graph_code):
         location="us-central1",
     )
 
-    print('running the graph improvement agent')
+    print("running the graph improvement agent")
 
-    si_text =  """
+    si_text = """
 
 You are Agent-3, a visual design expert and Python code refactorer for `graphviz` diagrams. Your input is: (1) the *standardized recipe* from Agent-1 (for context) and (2) the *Python code* from Agent-2 (which generates the diagram's structure).
      Your output is refactored, executable Python code that creates a visually appealing, modern, and stylish version of the diagram, renders it, and saves it as "recipe_flow.pdf".  The output must be *only* Python code; no explanations or comments. Verify python syntatic correctness.
@@ -417,9 +408,15 @@ You are Agent-3, a visual design expert and Python code refactorer for `graphviz
 
 *   `dot.render("recipe_flow", view=False, format="pdf")` (Saves the diagram as "recipe_flow.pdf").
 
-"""    
-    graph_code = types.Part.from_text(text="Here  is the python code that represents the recipe: \n" + graph_code + "\n")
-    recipe = types.Part.from_text(text="Here is the recipe you are capturing in graph format : \n" + recipe + "\n")
+"""
+    graph_code = types.Part.from_text(
+        text="Here  is the python code that represents the recipe: \n"
+        + graph_code
+        + "\n"
+    )
+    recipe = types.Part.from_text(
+        text="Here is the recipe you are capturing in graph format : \n" + recipe + "\n"
+    )
     parts = [recipe, graph_code]
 
     model = "gemini-2.0-pro-exp-02-05"
@@ -450,6 +447,6 @@ You are Agent-3, a visual design expert and Python code refactorer for `graphviz
         contents=contents,
         config=generate_content_config,
     )
-    print('finished the graph improvement agent')
+    print("finished the graph improvement agent")
 
     return response.text
