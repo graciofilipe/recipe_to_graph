@@ -1,30 +1,21 @@
 import logging
 import os
-from typing import List, Optional, Dict, Any, Literal # Import necessary types
-
-# Import specific exception type if available and needed for finer control
-# from google.api_core import exceptions as google_exceptions
+from typing import List, Optional, Dict, Any, Literal
 from google import genai
 from google.genai import types
 
-# --- Configuration Constants ---
-# Consider moving to a config file or environment variables for production systems
-DEFAULT_VERTEX_PROJECT_ID = os.getenv("PROJECT_ID") # Reads project ID from environment
+DEFAULT_VERTEX_PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
-DEFAULT_MODEL_NAME = "gemini-2.0-pro-exp-02-05" # Verify this is the intended model
+DEFAULT_MODEL_NAME = "gemini-2.0-pro-exp-02-05"
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
 
-# Configure basic logging
-# In a larger app, you might configure this in your main entry point
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__) # Get a logger specific to this module
-
-# --- Helper Functions ---
+logger = logging.getLogger(__name__)
 
 def _get_genai_client(
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
@@ -52,8 +43,8 @@ def _get_genai_client(
         logger.info(f"Initialized GenAI client for project '{project_id}' in '{location}'.")
         return client
     except Exception as e:
-        logger.exception(f"Failed to initialize GenAI client: {e}") # Log the full traceback
-        raise # Re-raise the exception to signal failure
+        logger.exception(f"Failed to initialize GenAI client: {e}")
+        raise
 
 def _build_generate_content_config(
     system_instruction_text: Optional[str] = None,
@@ -61,7 +52,6 @@ def _build_generate_content_config(
     temperature: float = DEFAULT_TEMPERATURE,
     top_p: float = DEFAULT_TOP_P,
     max_output_tokens: int = DEFAULT_MAX_TOKENS,
-    # Consider making safety settings more configurable if needed
 ) -> types.GenerateContentConfig:
     """
     Builds the GenerateContentConfig object for the API call.
@@ -76,8 +66,6 @@ def _build_generate_content_config(
     Returns:
         A configured types.GenerateContentConfig object.
     """
-    # Using BLOCK_NONE bypasses safety filtering. Be cautious with this in production.
-    # Consider using stricter settings (e.g., BLOCK_MEDIUM_AND_ABOVE) by default.
     safety_settings = [
         types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
         types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
@@ -90,11 +78,8 @@ def _build_generate_content_config(
         "top_p": top_p,
         "max_output_tokens": max_output_tokens,
         "safety_settings": safety_settings,
-        # "seed": 0, # Including a seed makes generation deterministic
-        # "response_modalities": ["TEXT"], # Often inferred
     }
     if system_instruction_text:
-        # Ensure system_instruction is a list of Parts
         config_kwargs["system_instruction"] = [types.Part.from_text(text=system_instruction_text)]
     if tools:
         config_kwargs["tools"] = tools
@@ -130,20 +115,14 @@ def _call_generate_content(
             contents=contents,
             config=config,
         )
-        # Add more robust checking based on expected response structure if needed
         if not hasattr(response, 'text') or not response.text:
              logger.warning(f"GenAI response for model '{model_name}' was empty or lacked text.")
-             # Depending on requirements, you might return "" or raise an error
              raise RuntimeError("Received empty response from AI model.")
         logger.debug(f"Received response text (length {len(response.text)}) from model '{model_name}'.")
         return response.text
-    # Use a more specific exception if available from the SDK, e.g., google_exceptions.GoogleAPIError
-    except Exception as e: # Catching a broad exception, consider more specific ones
+    except Exception as e:
         logger.exception(f"GenAI API call to model '{model_name}' failed: {e}")
-        # Re-raise as a RuntimeError or a custom exception
         raise RuntimeError(f"GenAI API call failed: {e}") from e
-
-# --- Main Functions ---
 
 def draft_to_recipe(
     recipe_draft: str,
@@ -174,7 +153,6 @@ def draft_to_recipe(
 
     text_part = types.Part.from_text(text=recipe_draft)
     contents = [types.Content(role="user", parts=[text_part])]
-    # Assuming GoogleSearch tool is desired based on original code
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
@@ -188,7 +166,7 @@ def draft_to_recipe(
 
 def re_write_recipe(
     recipe_input: str,
-    input_type: Literal["txt", "youtube"], # Use Literal for specific string options
+    input_type: Literal["txt", "youtube"],
     system_instruction: str,
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
@@ -219,16 +197,12 @@ def re_write_recipe(
     if input_type == "txt":
         parts.append(types.Part.from_text(text=recipe_input))
     elif input_type == "youtube":
-        # IMPORTANT: The file_uri must be accessible by the Vertex AI service.
-        # Typically, this means a Google Cloud Storage (GCS) URI (gs://...).
-        # Public https URLs may not work directly.
         logger.info(f"Processing video URI: {recipe_input}")
         try:
             video_part = types.Part.from_uri(
                 file_uri=recipe_input,
-                mime_type="video/*", # Model usually infers, but can be explicit
+                mime_type="video/*",
             )
-            # Add context text if helpful for the model
             text_part = types.Part.from_text(
                 text="Generate a standardized recipe from the following video:"
             )
@@ -237,12 +211,10 @@ def re_write_recipe(
             logger.exception(f"Failed to create Part from URI '{recipe_input}': {e}")
             raise ValueError(f"Could not process video URI '{recipe_input}'. Ensure it's accessible (e.g., a GCS URI).") from e
     else:
-        # This case should be prevented by Literal, but good for robustness
         logger.error(f"Invalid input_type provided: '{input_type}'")
         raise ValueError(f"Invalid input_type: '{input_type}'. Must be 'txt' or 'youtube'.")
 
     contents = [types.Content(role="user", parts=parts)]
-    # No tools specified for re-write in the original code.
     config = _build_generate_content_config(system_instruction_text=system_instruction)
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -279,7 +251,6 @@ def generate_graph(
 
     text_part = types.Part.from_text(text=standardised_recipe)
     contents = [types.Content(role="user", parts=[text_part])]
-    # Assuming GoogleSearch tool is desired based on original code
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
@@ -320,7 +291,6 @@ def improve_graph(
     logger.info("Running the graph improvement agent...")
     client = _get_genai_client(project_id, location)
 
-    # Combine recipe and code with clearer context prompts for the model
     recipe_part = types.Part.from_text(
         text=f"## Standardized Recipe Context:\n\n{standardised_recipe}\n\n"
     )
@@ -329,7 +299,6 @@ def improve_graph(
         + "Improve the above Python code based on the recipe context and the system instructions."
     )
     contents = [types.Content(role="user", parts=[recipe_part, graph_code_part])]
-    # Assuming GoogleSearch tool is desired based on original code
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,

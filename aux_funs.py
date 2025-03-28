@@ -1,12 +1,9 @@
 import logging
-from pathlib import Path # Use pathlib for path manipulation
-from typing import Optional # Import Optional for type hints
+from pathlib import Path
+from typing import Optional
 
-# Consider setting up basic logging if needed elsewhere,
-# otherwise print might be sufficient for this simple case.
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Define default filename as a constant
 DEFAULT_FILENAME = "create_graph.py"
 
 def create_python_file_from_string(
@@ -59,12 +56,7 @@ def create_python_file_from_string(
         # Use 'w' mode and specify encoding
         with file_path.open("w", encoding="utf-8") as f:
             f.write(processed_code)
-        # Use logging instead of print for better practice
         logging.info(f"Successfully created Python file: {file_path}")
     except IOError as e:
         logging.error(f"Failed to write to file {filename}: {e}")
-        # Re-raise the exception after logging it
         raise
-
-# You could add example usage within a `if __name__ == "__main__":` block
-# for testing purposes if desired.
