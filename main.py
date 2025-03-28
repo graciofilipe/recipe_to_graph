@@ -4,7 +4,7 @@ import argparse
 from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from aux_funs import create_python_file_from_string
 from aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
-from pathlib import Path # Import Path for consistency, though not used in this version yet
+from pathlib import Path # Import Path
 
 
 # --- Configuration (Consider moving to a config file or constants module) ---
@@ -20,6 +20,10 @@ DEFAULT_MAX_TOKENS = 8048
 # Define the name for the temporary script and output recipe file
 DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py"
 STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt" # Filename for output
+# Define names for the intermediate Graphviz source files (without extension)
+INITIAL_GRAPHVIZ_SOURCE = "initial_recipe_flow"
+FINAL_GRAPHVIZ_SOURCE = "recipe_flow"
+
 
 if __name__ == "__main__":
 
@@ -73,13 +77,11 @@ if __name__ == "__main__":
                 model_name=DEFAULT_MODEL_NAME
             )
 
-            # --- ADDED: Print standardized recipe ---
+            # --- Process standardized recipe ---
             if standardised_recipe: # Check if it was successfully created
-                print("\n" + "="*30 + " Standardized Recipe " + "="*30)
-                print(standardised_recipe)
-                print("="*80 + "\n")
+                # --- REMOVED: Print standardized recipe to screen ---
 
-                # --- ADDED: Write standardized recipe to file ---
+                # --- Write standardized recipe to file ---
                 try:
                     output_recipe_path = Path(STANDARDISED_RECIPE_FILENAME)
                     with open(output_recipe_path, "w", encoding="utf-8") as f:
@@ -88,7 +90,7 @@ if __name__ == "__main__":
                 except IOError as e:
                     # Log a warning but continue execution
                     print(f"Warning: Could not write standardized recipe to file '{STANDARDISED_RECIPE_FILENAME}': {e}")
-                # --- END ADDED ---
+                # --- END Write section ---
 
             else:
                 # Handle case where standardization failed
@@ -121,6 +123,16 @@ if __name__ == "__main__":
         os.system(f"python {temp_script_name}")
         print("Initial graph script execution finished (check 'initial_recipe_flow.pdf').")
 
+        # --- Clean up initial intermediate dot file ---
+        try:
+            initial_dot_file_path = Path(INITIAL_GRAPHVIZ_SOURCE)
+            if initial_dot_file_path.exists():
+                initial_dot_file_path.unlink() # Use unlink for Path objects
+                print(f"Cleaned up intermediate file: {initial_dot_file_path}")
+        except OSError as e:
+            print(f"Warning: Could not remove intermediate file {initial_dot_file_path}: {e}")
+        # --- END Clean up ---
+
         # --- Remove Initial Script ---
         # This was in the original context, kept here but be aware it removes the script
         # before the improve step uses the *code string* (first_pass_graph_code)
@@ -150,13 +162,26 @@ if __name__ == "__main__":
         os.system(f"python {temp_script_name}")
         print("Final graph script execution finished (check 'recipe_flow.pdf').")
 
-        # --- Final Cleanup (Optional) ---
-        # Consider adding cleanup for the final script if desired
-        # try:
-        #     os.remove(temp_script_name)
-        #     print(f"Cleaned up final temporary script: {temp_script_name}")
-        # except OSError as e:
-        #     print(f"Warning: Could not clean up final temporary script {temp_script_name}: {e}")
+        # --- Clean up final intermediate dot file ---
+        try:
+            final_dot_file_path = Path(FINAL_GRAPHVIZ_SOURCE)
+            if final_dot_file_path.exists():
+                final_dot_file_path.unlink() # Use unlink for Path objects
+                print(f"Cleaned up intermediate file: {final_dot_file_path}")
+        except OSError as e:
+            print(f"Warning: Could not remove intermediate file {final_dot_file_path}: {e}")
+        # --- END Clean up ---
+
+
+        #--- Final Cleanup (Python Script) ---
+        # Clean up the temporary python script itself
+        try:
+            temp_script_path = Path(temp_script_name)
+            if temp_script_path.exists():
+                temp_script_path.unlink()
+                print(f"Cleaned up final temporary script: {temp_script_path}")
+        except OSError as e:
+            print(f"Warning: Could not clean up final temporary script {temp_script_path}: {e}")
 
     except FileNotFoundError as e:
         print(f"Error: Input file not found - {e}")
