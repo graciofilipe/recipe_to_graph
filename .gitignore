@@ -170,7 +170,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-
 # others
 recipe_draft.txt
 recipe_flow.pdf
