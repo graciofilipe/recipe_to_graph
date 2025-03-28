@@ -1,123 +1,102 @@
 import graphviz
 
-dot = graphviz.Digraph(comment='Tricolour Recipe', graph_attr={'layout': 'dot', 'nodesep': '0.7', 'ranksep': '1.0', 'rankdir': 'TB'})
+dot = graphviz.Digraph(comment='Harira Soup Recipe')
+dot.graph_attr['layout'] = 'dot'
+dot.graph_attr['rankdir'] = 'TB'
+dot.graph_attr['nodesep'] = '0.7'
+dot.graph_attr['ranksep'] = '1.0'
 
-# General Node Style
-dot.node_attr['fontname'] = 'Helvetica'
-dot.node_attr['fontsize'] = '12'
-dot.node_attr['style'] = 'rounded, filled'
+def ingredient_node(dot, name, label, color):
+    dot.node(name, label, shape='ellipse', style='rounded, filled', fillcolor=color, fontname="Helvetica", fontsize="12")
 
-# General Edge Style
-dot.edge_attr['arrowhead'] = 'normal'
-dot.edge_attr['arrowsize'] = '0.7'
-dot.edge_attr['fontname'] = 'Helvetica'
-dot.edge_attr['fontsize'] = '10'
-dot.edge_attr['penwidth'] = '0.8'
+def prep_action_node(dot, name, label, color='lightblue'):
+    dot.node(name, label, shape='parallelogram', style='rounded, filled', fillcolor=color, fontname="Helvetica", fontsize="12")
 
-# Course 1: Tricolour Celebration Cubes
+def mix_action_node(dot, name, label, color='lightsalmon'):
+    dot.node(name, label, shape='diamond', style='rounded, filled', fillcolor=color, fontname="Helvetica", fontsize="12")
 
-with dot.subgraph(name='cluster_course1') as c1:
-    c1.attr(label='Course 1: Tricolour Celebration Cubes')
-    c1.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
+def cook_action_node(dot, name, label, color='coral'):
+    dot.node(name, label, shape='oval', style='rounded, filled', fillcolor=color, fontname="Helvetica", fontsize="12")
 
-    with c1.subgraph(name='cluster_parsnip') as parsnip:
-        parsnip.attr(label='Parsnip (White) Layer')
-        parsnip.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        parsnip.node('Parsnips', '2 Parsnips', shape='ellipse', fillcolor='lightyellow')
-        parsnip.node('Cut Parsnips', 'Cut Parsnips\ninto 1-inch cubes', shape='parallelogram', fillcolor='lemonchiffon')
-        parsnip.node('Cook Parsnips', 'Steam/Boil Parsnips\n(8-10 min)', shape='house', fillcolor='skyblue')
-        parsnip.edge('Parsnips', 'Cut Parsnips')
-        parsnip.edge('Cut Parsnips', 'Cook Parsnips')
-        parsnip.node('Ice Water Bath', 'Transfer to\nIce Water', shape='Mdiamond', fillcolor='powderblue')
-        parsnip.edge('Cook Parsnips', 'Ice Water Bath', style='dashed', label='until tender', color='darkblue')
-        parsnip.node('Drain Parsnips', 'Drain Parsnips', shape='diamond', fillcolor='lightsalmon')
-        parsnip.edge('Ice Water Bath', 'Drain Parsnips')
-        parsnip.node('Season Parsnips', 'Toss with Lemon Juice,\nSalt, White Pepper', shape='diamond', fillcolor='lightsalmon')
-        parsnip.edge('Drain Parsnips', 'Season Parsnips')
-        parsnip.node('Chill Parsnips', 'Chill Parsnips', shape='component', fillcolor='lightgray')
-        parsnip.edge('Season Parsnips', 'Chill Parsnips', style='dashed', color='gray')
+def serve_action_node(dot, name, label, color='palegreen'):
+    dot.node(name, label, shape='doublecircle', style='rounded, filled', fillcolor=color, fontname="Helvetica", fontsize="12")
 
-    with c1.subgraph(name='cluster_beetroot') as beetroot:
-        beetroot.attr(label='Beetroot (Purple) Layer')
-        beetroot.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        beetroot.node('Beetroots', '2 Beetroots\n(pre-cooked)', shape='ellipse', fillcolor='plum')
-        beetroot.node('Cut Beetroots', 'Cut Beetroots\ninto 1-inch cubes', shape='parallelogram', fillcolor='violet')
-        beetroot.edge('Beetroots', 'Cut Beetroots')
-        beetroot.node('Season Beetroots', 'Toss with Balsamic Vinegar,\nSalt, Pepper', shape='diamond', fillcolor='lightsalmon')
-        beetroot.edge('Cut Beetroots', 'Season Beetroots')
-        beetroot.node('Chill Beetroots', 'Chill Beetroots', shape='component', fillcolor='lightgray')
-        beetroot.edge('Season Beetroots', 'Chill Beetroots', style='dashed', color='gray')
+# --- Preparation Subgraph ---
+with dot.subgraph(name='cluster_preparation') as prep:
+    prep.attr(label='Preparation', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    ingredient_node(prep, 'Lentils', 'Lentils\n(15-ounce / 425g can)', 'lightgreen')
+    ingredient_node(prep, 'Chickpeas', 'Chickpeas\n(15-ounce / 425g can)', 'lightyellow')
+    prep_action_node(prep, 'Drain and Rinse Lentils', 'Drain and Rinse Lentils', 'powderblue')
+    prep_action_node(prep, 'Drain and Rinse Chickpeas', 'powderblue')
+    ingredient_node(prep, 'Cilantro', 'Fresh Cilantro\n(1/4 cup)', 'palegreen')
+    ingredient_node(prep, 'Parsley', 'Fresh Parsley\n(1/4 cup)', 'palegreen')
+    prep_action_node(prep, 'Chop Cilantro and Parsley', 'Chop Cilantro and Parsley')
 
-    with c1.subgraph(name='cluster_avocado') as avocado:
-        avocado.attr(label='Avocado (Green) Layer')
-        avocado.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        avocado.node('Avocado', '1 Avocado', shape='ellipse', fillcolor='lightgreen')
-        avocado.node('Cut Avocado', 'Cut Avocado\ninto 1-inch cubes', shape='parallelogram', fillcolor='palegreen')
-        avocado.edge('Avocado', 'Cut Avocado')
-        avocado.node('Season Avocado', 'Toss with Lime Juice,\nSalt, Pepper, Cilantro/Parsley', shape='diamond', fillcolor='lightsalmon')
-        avocado.edge('Cut Avocado', 'Season Avocado')
-        avocado.node('Chill Avocado', 'Chill Avocado', shape='component', fillcolor='lightgray')
-        avocado.edge('Season Avocado', 'Chill Avocado', style='dashed', color='gray')
+    prep.edge('Lentils', 'Drain and Rinse Lentils', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", color="powderblue")
+    prep.edge('Chickpeas', 'Drain and Rinse Chickpeas', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", color="powderblue")
+    prep.edge('Cilantro', 'Chop Cilantro and Parsley', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    prep.edge('Parsley', 'Chop Cilantro and Parsley', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
-    c1.node('Assemble Course 1', 'Arrange Cubes\non Platter', shape='doublecircle', fillcolor='palegreen')
-    c1.edge('Chill Parsnips', 'Assemble Course 1')
-    c1.edge('Chill Beetroots', 'Assemble Course 1')
-    c1.edge('Chill Avocado', 'Assemble Course 1')
-    c1.node('Serve Course 1', 'Serve Chilled', shape='plaintext', style='')
-    c1.edge('Assemble Course 1', 'Serve Course 1', style='dashed')
+# --- Sautéing Aromatics Subgraph ---
+with dot.subgraph(name='cluster_sauteing') as saute:
+    saute.attr(label='Sautéing Aromatics', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    ingredient_node(saute, 'Olive Oil', 'Olive Oil\n(1 tbsp)', 'lightyellow')
+    ingredient_node(saute, 'Onion', 'Onion\n(1 large)', 'lightyellow')
+    ingredient_node(saute, 'Celery', 'Celery\n(2 stalks)', 'lightgreen')
+    prep_action_node(saute, 'Chop Onion and Celery', 'Chop Onion and Celery', 'palegreen')
+    prep_action_node(saute, 'Heat Oil', 'Heat Olive Oil\nin Large Pot', 'lightsalmon')
+    cook_action_node(saute, 'Saute Onion and Celery', 'Saute Onion and Celery\n(5-7 minutes)', 'coral')
 
-# Course 2: Tricolour Harmony Plate
+    saute.edge('Olive Oil', 'Heat Oil', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    saute.edge('Onion', 'Chop Onion and Celery', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    saute.edge('Celery', 'Chop Onion and Celery', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    saute.edge('Chop Onion and Celery', 'Saute Onion and Celery', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    saute.edge('Heat Oil', 'Saute Onion and Celery', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
-with dot.subgraph(name='cluster_course2') as c2:
-    c2.attr(label='Course 2: Tricolour Harmony Plate')
-    c2.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
+# --- Blooming Spices Subgraph ---
+with dot.subgraph(name='cluster_blooming') as bloom:
+    bloom.attr(label='Blooming Spices', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    ingredient_node(bloom, 'Garlic', 'Garlic\n(4 cloves)', 'lightyellow')
+    prep_action_node(bloom, 'Mince Garlic', 'Mince Garlic')
+    ingredient_node(bloom, 'Spices', 'Ginger (1 tsp)\nTurmeric (1 tsp)\nCinnamon (1/2 tsp)\nBlack Pepper (1/2 tsp)\nCayenne (1/4 tsp, optional)', 'yellow')
+    mix_action_node(bloom, 'Add Spices and Garlic', 'Add Minced Garlic and Spices\nto Pot')
+    cook_action_node(bloom, 'Cook Spices', 'Cook Spices\n(1 minute)')
 
-    with c2.subgraph(name='cluster_tofu') as tofu:
-        tofu.attr(label='Tofu (White) Preparation')
-        tofu.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        tofu.node('Tofu', '1 Block Extra-Firm\nTofu (pressed)', shape='ellipse', fillcolor='lightyellow')
-        tofu.node('Cut Tofu', 'Cut Tofu\ninto 1-inch cubes', shape='parallelogram', fillcolor='lemonchiffon')
-        tofu.edge('Tofu', 'Cut Tofu')
-        tofu.node('Season Tofu', 'Toss with Soy Sauce,\nSesame Oil, Garlic Powder,\nOnion Powder, Cornstarch', shape='diamond', fillcolor='lightsalmon')
-        tofu.edge('Cut Tofu', 'Season Tofu')
-        tofu.node('Cook Tofu', 'Cook in Skillet\n(8-10 min)', shape='oval', fillcolor='orangered')
-        tofu.edge('Season Tofu', 'Cook Tofu')
-        tofu.node('Set Aside Tofu', 'Set Aside', shape='component', fillcolor='lightgray')
-        tofu.edge('Cook Tofu', 'Set Aside Tofu', style='dashed', label='until golden brown', color='orangered')
+    bloom.edge('Garlic', 'Mince Garlic', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    bloom.edge('Mince Garlic', 'Add Spices and Garlic', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    bloom.edge('Spices', 'Add Spices and Garlic', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    bloom.edge('Add Spices and Garlic', 'Cook Spices', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    bloom.edge('Saute Onion and Celery', 'Add Spices and Garlic', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
-    with c2.subgraph(name='cluster_spring_greens') as greens:
-        greens.attr(label='Spring Greens (Green) Preparation')
-        greens.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        greens.node('Spring Greens', '1 Bunch\nSpring Greens', shape='ellipse', fillcolor='lightgreen')
-        greens.node('Prepare Greens', 'Wash and Chop\nSpring Greens', shape='parallelogram', fillcolor='palegreen')
-        greens.edge('Spring Greens', 'Prepare Greens')
-        greens.node('Olive Oil', 'Heat Olive Oil', shape='oval', fillcolor='lightcoral')
-        greens.node('Cook Garlic', 'Cook Minced Garlic\n(30 sec)', shape='oval', fillcolor='tomato')
-        greens.edge('Olive Oil', 'Cook Garlic', style='dashed', label='until fragrant', color='orangered')
-        greens.node('Cook Greens', 'Cook Spring Greens\n(3-5 min)', shape='house', fillcolor='skyblue')
-        greens.edge('Cook Garlic', 'Cook Greens', color='orangered')
-        greens.edge('Prepare Greens', 'Cook Greens')
-        greens.node('Set Aside Greens', 'Set Aside', shape='component', fillcolor='lightgray')
-        greens.edge('Cook Greens', 'Set Aside Greens', style='dashed', label='until wilted', color='darkblue')
+# --- Combining and Simmering Subgraph ---
+with dot.subgraph(name='cluster_simmering') as simmer:
+    simmer.attr(label='Combining and Simmering', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    ingredient_node(simmer, 'Crushed Tomatoes', 'Crushed Tomatoes\n(14.5 ounce / 411g can)', 'lightcoral')
+    ingredient_node(simmer, 'Tomato Paste', 'Tomato Paste\n(2 tbsp)', 'tomato')
+    ingredient_node(simmer, 'Vegetable Broth', 'Vegetable Broth\n(6-8 cups)', 'powderblue')
+    ingredient_node(simmer, 'Rice', 'Long Grain Rice\n(1/4 cup)', 'cornsilk')
+    mix_action_node(simmer, 'Combine Ingredients', 'Combine Crushed Tomatoes,\nTomato Paste, Broth, and Rice\nwith Lentils and Chickpeas')
+    cook_action_node(simmer, 'Simmer Soup', 'Simmer Soup\n(20-25 minutes)', 'skyblue')
 
-    with c2.subgraph(name='cluster_cabbage') as cabbage:
-        cabbage.attr(label='Purple Cabbage (Purple) Preparation')
-        cabbage.attr(fontname='Helvetica', fontweight='bold', fontsize='14', style='dashed', pencolor='gray')
-        cabbage.node('Purple Cabbage', '1/2 Head\nPurple Cabbage', shape='ellipse', fillcolor='plum')
-        cabbage.node('Slice Cabbage', 'Thinly Slice Cabbage', shape='parallelogram', fillcolor='violet')
-        cabbage.edge('Purple Cabbage', 'Slice Cabbage')
-        cabbage.node('Season Cabbage', 'Combine with Apple Cider Vinegar,\nSugar, Salt, Pepper', shape='diamond', fillcolor='lightsalmon')
-        cabbage.edge('Slice Cabbage', 'Season Cabbage')
-        cabbage.node('Massage Cabbage', 'Massage Cabbage\n(1-2 min)', shape='hexagon', fillcolor='lightsteelblue')
-        cabbage.edge('Season Cabbage', 'Massage Cabbage')
-        cabbage.node('Set Aside Cabbage', 'Set Aside', shape='component', fillcolor='lightgray')
-        cabbage.edge('Massage Cabbage', 'Set Aside Cabbage', style='dashed', color='gray')
+    simmer.edge('Crushed Tomatoes', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Tomato Paste', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Vegetable Broth', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Rice', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Drain and Rinse Lentils', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Drain and Rinse Chickpeas', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Cook Spices', 'Combine Ingredients', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    simmer.edge('Combine Ingredients', 'Simmer Soup', style='dashed', label='until rice is cooked', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8", labelfontcolor="darkgray", color="skyblue")
 
-    c2.node('Assemble Course 2', 'Arrange Tofu, Greens,\nand Cabbage on Plates', shape='doublecircle', fillcolor='palegreen')
-    c2.edge('Set Aside Tofu', 'Assemble Course 2')
-    c2.edge('Set Aside Greens', 'Assemble Course 2')
-    c2.edge('Set Aside Cabbage', 'Assemble Course 2')
-    c2.node('Serve Course 2', 'Serve Immediately', shape='plaintext', style='')
-    c2.edge('Assemble Course 2', 'Serve Course 2')
+# --- Finishing and Serving Subgraph ---
+with dot.subgraph(name='cluster_serving') as serve:
+    serve.attr(label='Finishing and Serving', fontname="Helvetica", fontweight="bold", fontsize="14", style="dashed", pencolor="gray")
+    ingredient_node(serve, 'Lemon Wedges', 'Lemon Wedges', 'lightyellow')
+    mix_action_node(serve, 'Stir in Herbs', 'Stir in Chopped\nCilantro and Parsley')
+    serve_action_node(serve, 'Serve', 'Serve Hot\nwith Lemon Wedges')
+
+    serve.edge('Chop Cilantro and Parsley', 'Stir in Herbs', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    serve.edge('Simmer Soup', 'Stir in Herbs', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    serve.edge('Stir in Herbs', 'Serve', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
+    serve.edge('Lemon Wedges', 'Serve', arrowhead="normal", arrowsize="0.7", fontname="Helvetica", fontsize="10", penwidth="0.8")
 
 dot.render("recipe_flow", view=False, format="pdf")

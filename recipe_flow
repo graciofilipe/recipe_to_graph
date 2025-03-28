@@ -1,129 +1,97 @@
-// Tricolour Recipe
+// Harira Soup Recipe
 digraph {
 	graph [layout=dot nodesep=0.7 rankdir=TB ranksep=1.0]
-	node [fontname=Helvetica fontsize=12 style="rounded, filled"]
-	edge [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
-	subgraph cluster_course1 {
-		label="Course 1: Tricolour Celebration Cubes"
-		fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-		subgraph cluster_parsnip {
-			label="Parsnip (White) Layer"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			Parsnips [label="2 Parsnips" fillcolor=lightyellow shape=ellipse]
-			"Cut Parsnips" [label="Cut Parsnips
-into 1-inch cubes" fillcolor=lemonchiffon shape=parallelogram]
-			"Cook Parsnips" [label="Steam/Boil Parsnips
-(8-10 min)" fillcolor=skyblue shape=house]
-			Parsnips -> "Cut Parsnips"
-			"Cut Parsnips" -> "Cook Parsnips"
-			"Ice Water Bath" [label="Transfer to
-Ice Water" fillcolor=powderblue shape=Mdiamond]
-			"Cook Parsnips" -> "Ice Water Bath" [label="until tender" color=darkblue style=dashed]
-			"Drain Parsnips" [label="Drain Parsnips" fillcolor=lightsalmon shape=diamond]
-			"Ice Water Bath" -> "Drain Parsnips"
-			"Season Parsnips" [label="Toss with Lemon Juice,
-Salt, White Pepper" fillcolor=lightsalmon shape=diamond]
-			"Drain Parsnips" -> "Season Parsnips"
-			"Chill Parsnips" [label="Chill Parsnips" fillcolor=lightgray shape=component]
-			"Season Parsnips" -> "Chill Parsnips" [color=gray style=dashed]
-		}
-		subgraph cluster_beetroot {
-			label="Beetroot (Purple) Layer"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			Beetroots [label="2 Beetroots
-(pre-cooked)" fillcolor=plum shape=ellipse]
-			"Cut Beetroots" [label="Cut Beetroots
-into 1-inch cubes" fillcolor=violet shape=parallelogram]
-			Beetroots -> "Cut Beetroots"
-			"Season Beetroots" [label="Toss with Balsamic Vinegar,
-Salt, Pepper" fillcolor=lightsalmon shape=diamond]
-			"Cut Beetroots" -> "Season Beetroots"
-			"Chill Beetroots" [label="Chill Beetroots" fillcolor=lightgray shape=component]
-			"Season Beetroots" -> "Chill Beetroots" [color=gray style=dashed]
-		}
-		subgraph cluster_avocado {
-			label="Avocado (Green) Layer"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			Avocado [label="1 Avocado" fillcolor=lightgreen shape=ellipse]
-			"Cut Avocado" [label="Cut Avocado
-into 1-inch cubes" fillcolor=palegreen shape=parallelogram]
-			Avocado -> "Cut Avocado"
-			"Season Avocado" [label="Toss with Lime Juice,
-Salt, Pepper, Cilantro/Parsley" fillcolor=lightsalmon shape=diamond]
-			"Cut Avocado" -> "Season Avocado"
-			"Chill Avocado" [label="Chill Avocado" fillcolor=lightgray shape=component]
-			"Season Avocado" -> "Chill Avocado" [color=gray style=dashed]
-		}
-		"Assemble Course 1" [label="Arrange Cubes
-on Platter" fillcolor=palegreen shape=doublecircle]
-		"Chill Parsnips" -> "Assemble Course 1"
-		"Chill Beetroots" -> "Assemble Course 1"
-		"Chill Avocado" -> "Assemble Course 1"
-		"Serve Course 1" [label="Serve Chilled" shape=plaintext style=""]
-		"Assemble Course 1" -> "Serve Course 1" [style=dashed]
+	subgraph cluster_preparation {
+		fontname=Helvetica fontsize=14 fontweight=bold label=Preparation pencolor=gray style=dashed
+		Lentils [label="Lentils
+(15-ounce / 425g can)" fillcolor=lightgreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		Chickpeas [label="Chickpeas
+(15-ounce / 425g can)" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Drain and Rinse Lentils" [label="Drain and Rinse Lentils" fillcolor=powderblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		"Drain and Rinse Chickpeas" [label=powderblue fillcolor=lightblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		Cilantro [label="Fresh Cilantro
+(1/4 cup)" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		Parsley [label="Fresh Parsley
+(1/4 cup)" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Chop Cilantro and Parsley" [label="Chop Cilantro and Parsley" fillcolor=lightblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		Lentils -> "Drain and Rinse Lentils" [arrowhead=normal arrowsize=0.7 color=powderblue fontname=Helvetica fontsize=10 penwidth=0.8]
+		Chickpeas -> "Drain and Rinse Chickpeas" [arrowhead=normal arrowsize=0.7 color=powderblue fontname=Helvetica fontsize=10 penwidth=0.8]
+		Cilantro -> "Chop Cilantro and Parsley" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		Parsley -> "Chop Cilantro and Parsley" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
 	}
-	subgraph cluster_course2 {
-		label="Course 2: Tricolour Harmony Plate"
-		fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-		subgraph cluster_tofu {
-			label="Tofu (White) Preparation"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			Tofu [label="1 Block Extra-Firm
-Tofu (pressed)" fillcolor=lightyellow shape=ellipse]
-			"Cut Tofu" [label="Cut Tofu
-into 1-inch cubes" fillcolor=lemonchiffon shape=parallelogram]
-			Tofu -> "Cut Tofu"
-			"Season Tofu" [label="Toss with Soy Sauce,
-Sesame Oil, Garlic Powder,
-Onion Powder, Cornstarch" fillcolor=lightsalmon shape=diamond]
-			"Cut Tofu" -> "Season Tofu"
-			"Cook Tofu" [label="Cook in Skillet
-(8-10 min)" fillcolor=orangered shape=oval]
-			"Season Tofu" -> "Cook Tofu"
-			"Set Aside Tofu" [label="Set Aside" fillcolor=lightgray shape=component]
-			"Cook Tofu" -> "Set Aside Tofu" [label="until golden brown" color=orangered style=dashed]
-		}
-		subgraph cluster_spring_greens {
-			label="Spring Greens (Green) Preparation"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			"Spring Greens" [label="1 Bunch
-Spring Greens" fillcolor=lightgreen shape=ellipse]
-			"Prepare Greens" [label="Wash and Chop
-Spring Greens" fillcolor=palegreen shape=parallelogram]
-			"Spring Greens" -> "Prepare Greens"
-			"Olive Oil" [label="Heat Olive Oil" fillcolor=lightcoral shape=oval]
-			"Cook Garlic" [label="Cook Minced Garlic
-(30 sec)" fillcolor=tomato shape=oval]
-			"Olive Oil" -> "Cook Garlic" [label="until fragrant" color=orangered style=dashed]
-			"Cook Greens" [label="Cook Spring Greens
-(3-5 min)" fillcolor=skyblue shape=house]
-			"Cook Garlic" -> "Cook Greens" [color=orangered]
-			"Prepare Greens" -> "Cook Greens"
-			"Set Aside Greens" [label="Set Aside" fillcolor=lightgray shape=component]
-			"Cook Greens" -> "Set Aside Greens" [label="until wilted" color=darkblue style=dashed]
-		}
-		subgraph cluster_cabbage {
-			label="Purple Cabbage (Purple) Preparation"
-			fontname=Helvetica fontsize=14 fontweight=bold pencolor=gray style=dashed
-			"Purple Cabbage" [label="1/2 Head
-Purple Cabbage" fillcolor=plum shape=ellipse]
-			"Slice Cabbage" [label="Thinly Slice Cabbage" fillcolor=violet shape=parallelogram]
-			"Purple Cabbage" -> "Slice Cabbage"
-			"Season Cabbage" [label="Combine with Apple Cider Vinegar,
-Sugar, Salt, Pepper" fillcolor=lightsalmon shape=diamond]
-			"Slice Cabbage" -> "Season Cabbage"
-			"Massage Cabbage" [label="Massage Cabbage
-(1-2 min)" fillcolor=lightsteelblue shape=hexagon]
-			"Season Cabbage" -> "Massage Cabbage"
-			"Set Aside Cabbage" [label="Set Aside" fillcolor=lightgray shape=component]
-			"Massage Cabbage" -> "Set Aside Cabbage" [color=gray style=dashed]
-		}
-		"Assemble Course 2" [label="Arrange Tofu, Greens,
-and Cabbage on Plates" fillcolor=palegreen shape=doublecircle]
-		"Set Aside Tofu" -> "Assemble Course 2"
-		"Set Aside Greens" -> "Assemble Course 2"
-		"Set Aside Cabbage" -> "Assemble Course 2"
-		"Serve Course 2" [label="Serve Immediately" shape=plaintext style=""]
-		"Assemble Course 2" -> "Serve Course 2"
+	subgraph cluster_sauteing {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Sautéing Aromatics" pencolor=gray style=dashed
+		"Olive Oil" [label="Olive Oil
+(1 tbsp)" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		Onion [label="Onion
+(1 large)" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		Celery [label="Celery
+(2 stalks)" fillcolor=lightgreen fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Chop Onion and Celery" [label="Chop Onion and Celery" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		"Heat Oil" [label="Heat Olive Oil
+in Large Pot" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		"Saute Onion and Celery" [label="Saute Onion and Celery
+(5-7 minutes)" fillcolor=coral fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		"Olive Oil" -> "Heat Oil" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		Onion -> "Chop Onion and Celery" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		Celery -> "Chop Onion and Celery" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Chop Onion and Celery" -> "Saute Onion and Celery" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Heat Oil" -> "Saute Onion and Celery" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+	}
+	subgraph cluster_blooming {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Blooming Spices" pencolor=gray style=dashed
+		Garlic [label="Garlic
+(4 cloves)" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Mince Garlic" [label="Mince Garlic" fillcolor=lightblue fontname=Helvetica fontsize=12 shape=parallelogram style="rounded, filled"]
+		Spices [label="Ginger (1 tsp)
+Turmeric (1 tsp)
+Cinnamon (1/2 tsp)
+Black Pepper (1/2 tsp)
+Cayenne (1/4 tsp, optional)" fillcolor=yellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Add Spices and Garlic" [label="Add Minced Garlic and Spices
+to Pot" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		"Cook Spices" [label="Cook Spices
+(1 minute)" fillcolor=coral fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		Garlic -> "Mince Garlic" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Mince Garlic" -> "Add Spices and Garlic" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		Spices -> "Add Spices and Garlic" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Add Spices and Garlic" -> "Cook Spices" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Saute Onion and Celery" -> "Add Spices and Garlic" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+	}
+	subgraph cluster_simmering {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Combining and Simmering" pencolor=gray style=dashed
+		"Crushed Tomatoes" [label="Crushed Tomatoes
+(14.5 ounce / 411g can)" fillcolor=lightcoral fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Tomato Paste" [label="Tomato Paste
+(2 tbsp)" fillcolor=tomato fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Vegetable Broth" [label="Vegetable Broth
+(6-8 cups)" fillcolor=powderblue fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		Rice [label="Long Grain Rice
+(1/4 cup)" fillcolor=cornsilk fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Combine Ingredients" [label="Combine Crushed Tomatoes,
+Tomato Paste, Broth, and Rice
+with Lentils and Chickpeas" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		"Simmer Soup" [label="Simmer Soup
+(20-25 minutes)" fillcolor=skyblue fontname=Helvetica fontsize=12 shape=oval style="rounded, filled"]
+		"Crushed Tomatoes" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Tomato Paste" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Vegetable Broth" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		Rice -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Drain and Rinse Lentils" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Drain and Rinse Chickpeas" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Cook Spices" -> "Combine Ingredients" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Combine Ingredients" -> "Simmer Soup" [label="until rice is cooked" arrowhead=normal arrowsize=0.7 color=skyblue fontname=Helvetica fontsize=10 labelfontcolor=darkgray penwidth=0.8 style=dashed]
+	}
+	subgraph cluster_serving {
+		fontname=Helvetica fontsize=14 fontweight=bold label="Finishing and Serving" pencolor=gray style=dashed
+		"Lemon Wedges" [label="Lemon Wedges" fillcolor=lightyellow fontname=Helvetica fontsize=12 shape=ellipse style="rounded, filled"]
+		"Stir in Herbs" [label="Stir in Chopped
+Cilantro and Parsley" fillcolor=lightsalmon fontname=Helvetica fontsize=12 shape=diamond style="rounded, filled"]
+		Serve [label="Serve Hot
+with Lemon Wedges" fillcolor=palegreen fontname=Helvetica fontsize=12 shape=doublecircle style="rounded, filled"]
+		"Chop Cilantro and Parsley" -> "Stir in Herbs" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Simmer Soup" -> "Stir in Herbs" [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Stir in Herbs" -> Serve [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
+		"Lemon Wedges" -> Serve [arrowhead=normal arrowsize=0.7 fontname=Helvetica fontsize=10 penwidth=0.8]
 	}
 }
