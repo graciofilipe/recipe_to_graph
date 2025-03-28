@@ -6,7 +6,7 @@ from google.genai import types
 
 DEFAULT_VERTEX_PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
-DEFAULT_MODEL_NAME = "gemini-2.0-pro-exp-02-05"
+DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25"
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
@@ -78,11 +78,13 @@ def _build_generate_content_config(
         "top_p": top_p,
         "max_output_tokens": max_output_tokens,
         "safety_settings": safety_settings,
+        "candidate_count": 1
     }
     if system_instruction_text:
         config_kwargs["system_instruction"] = [types.Part.from_text(text=system_instruction_text)]
     if tools:
         config_kwargs["tools"] = tools
+    config_kwargs["thinking_config"] = types.ThinkingConfig(include_thoughts=True)
 
     return types.GenerateContentConfig(**config_kwargs)
 
