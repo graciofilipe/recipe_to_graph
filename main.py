@@ -36,21 +36,6 @@ if __name__ == "__main__":
             standardised_recipe = re_write_recipe(recipe_input=recipe, input_type="txt", system_instruction=RE_WRITE_SYS_PROMPT, project_id=PROJECT_ID, location=DEFAULT_VERTEX_LOCATION, model_name=DEFAULT_MODEL_NAME)
 
 
-    # if recipe_file:
-    #     # import text from test_recipe.txt file
-    #     with open(args.recipe_file, "r") as f:
-    #         pre_recipe = f.read()
-    #     standardised_recipe = re_write_recipe(
-    #         project_id=PROJECT_ID, recipe=pre_recipe, input_type="txt", si_text=RE_WRITE_SYS_PROMPT
-    #     )
-
-    # elif youtube_url:
-    #     recipe = youtube_url
-    #     standardised_recipe = re_write_recipe(
-    #         project_id=PROJECT_ID, recipe=youtube_url, input_type="youtube", si_text=RE_WRITE_SYS_PROMPT
-    #     )
-
-    ## With the standardised-recipe
     first_pass_graph = generate_graph(standardised_recipe=standardised_recipe, system_instruction=GENERATE_GRAPH_SYS_PROMPT, project_id=PROJECT_ID, location=DEFAULT_VERTEX_LOCATION, model_name=DEFAULT_MODEL_NAME)
 
     create_python_file_from_string(first_pass_graph)
