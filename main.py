@@ -1,6 +1,8 @@
 import os
 import argparse
 from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
+from datetime import date # Import date from datetime
+from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from aux_funs import create_python_file_from_string
 from aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
 from pathlib import Path
@@ -13,19 +15,20 @@ DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
 
-DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py"
-STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt"
-INITIAL_GRAPHVIZ_SOURCE = "initial_recipe_flow"
-FINAL_GRAPHVIZ_SOURCE = "recipe_flow"
+# DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py" # Removed, generated dynamically
+# STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt" # Removed, generated dynamically
+# INITIAL_GRAPHVIZ_SOURCE = "initial_recipe_flow" # Removed, generated dynamically
+# FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
 
 
-def process_recipe(recipe_draft_path_str: str):
+def process_recipe(recipe_draft_path_str: str, recipe_name: str):
     """
     Processes a recipe draft: converts, standardizes, verifies with user,
     generates initial and improved graphs, and cleans up intermediate files.
 
     Args:
         recipe_draft_path_str: Path to the recipe draft file.
+        recipe_name: Base name for output files.
 
     Raises:
         FileNotFoundError: If the recipe draft file is not found.
@@ -36,6 +39,9 @@ def process_recipe(recipe_draft_path_str: str):
     standardised_recipe = None
     recipe_draft_text = None
     input_source_description = f"draft file '{recipe_draft_path_str}'"
+    # Define date string early for use in all filenames
+    today_str = date.today().strftime("%Y_%m_%d")
+
 
     print(f"Processing recipe from {input_source_description}...")
     draft_path = Path(recipe_draft_path_str)
@@ -76,13 +82,15 @@ def process_recipe(recipe_draft_path_str: str):
     # --- End User Verification ---
 
     if standardised_recipe:
+        # Generate standardized recipe filename with date
+        output_recipe_filename = f"{recipe_name}_{today_str}.txt"
         try:
-            output_recipe_path = Path(STANDARDISED_RECIPE_FILENAME)
+            output_recipe_path = Path(output_recipe_filename)
             with open(output_recipe_path, "w", encoding="utf-8") as f:
                 f.write(standardised_recipe)
-            print(f"Successfully wrote standardized recipe to '{STANDARDISED_RECIPE_FILENAME}'")
+            print(f"Successfully wrote standardized recipe to '{output_recipe_filename}'")
         except IOError as e:
-            print(f"Warning: Could not write standardized recipe to file '{STANDARDISED_RECIPE_FILENAME}': {e}")
+            print(f"Warning: Could not write standardized recipe to file '{output_recipe_filename}': {e}")
 
     else:
         print("\nError: Standardized recipe could not be generated.\n")
@@ -99,14 +107,23 @@ def process_recipe(recipe_draft_path_str: str):
     )
     print("Initial graph code generated.")
 
-    temp_script_name = DEFAULT_GRAPH_SCRIPT_FILENAME
-    create_python_file_from_string(first_pass_graph_code, filename=temp_script_name)
-    print(f"Executing initial graph script: {temp_script_name}")
-    os.system(f"python {temp_script_name}")
-    print("Initial graph script execution finished (check 'initial_recipe_flow.pdf').")
+    # Define initial graph filenames and script name
+    initial_graph_base_name = f"{recipe_name}_initial_{today_str}"
+    initial_pdf_filename = f"{initial_graph_base_name}.pdf"
+    initial_script_name = f"{recipe_name}_initial_graph_script_{today_str}.py"
+
+    # Replace default filename in the generated initial code
+    first_pass_graph_code = first_pass_graph_code.replace("'initial_recipe_flow'", f"'{initial_graph_base_name}'")
+    first_pass_graph_code = first_pass_graph_code.replace('"initial_recipe_flow"', f'"{initial_graph_base_name}"')
+
+    create_python_file_from_string(first_pass_graph_code, filename=initial_script_name)
+    print(f"Executing initial graph script: {initial_script_name}")
+    os.system(f"python {initial_script_name}")
+    print(f"Initial graph script execution finished (check '{initial_pdf_filename}').") # Use dynamic filename
 
     try:
-        initial_dot_file_path = Path(INITIAL_GRAPHVIZ_SOURCE)
+        # Clean up the dynamically named initial .gv file
+        initial_dot_file_path = Path(f"{initial_graph_base_name}.gv") # Assuming .gv extension
         if initial_dot_file_path.exists():
             initial_dot_file_path.unlink()
             print(f"Cleaned up intermediate file: {initial_dot_file_path}")
@@ -114,10 +131,13 @@ def process_recipe(recipe_draft_path_str: str):
         print(f"Warning: Could not remove intermediate file {initial_dot_file_path}: {e}")
 
     try:
-        os.remove(temp_script_name)
-        print(f"Removed temporary script: {temp_script_name}")
+        # Clean up the dynamically named initial script file
+        initial_script_path = Path(initial_script_name)
+        if initial_script_path.exists():
+            initial_script_path.unlink()
+            print(f"Removed temporary script: {initial_script_path}")
     except OSError as e:
-        print(f"Warning: Could not remove temporary script {temp_script_name}: {e}")
+        print(f"Warning: Could not remove temporary script {initial_script_path}: {e}")
 
 
     print("Improving graph code...")
@@ -131,13 +151,26 @@ def process_recipe(recipe_draft_path_str: str):
     )
     print("Graph code improvement finished.")
 
-    create_python_file_from_string(improved_graph_code, filename=temp_script_name)
-    print(f"Executing final graph script: {temp_script_name}")
-    os.system(f"python {temp_script_name}")
-    print("Final graph script execution finished (check 'recipe_flow.pdf').")
+    # Define final graph filenames using recipe_name and date
+    # today_str should already be defined from standardised recipe step
+    # Define final graph filenames and script name
+    final_graph_base_name = f"{recipe_name}_final_{today_str}" # Added _final_ indicator
+    final_pdf_filename = f"{final_graph_base_name}.pdf"
+    final_script_name = f"{recipe_name}_final_graph_script_{today_str}.py"
+
+    # Replace default filename ('recipe_flow') in the improved code
+    improved_graph_code = improved_graph_code.replace("'recipe_flow'", f"'{final_graph_base_name}'")
+    improved_graph_code = improved_graph_code.replace('"recipe_flow"', f'"{final_graph_base_name}"')
+
+
+    create_python_file_from_string(improved_graph_code, filename=final_script_name) # Use dynamic script name
+    print(f"Executing final graph script: {final_script_name}") # Use dynamic script name
+    os.system(f"python {final_script_name}") # Use dynamic script name
+    print(f"Final graph script execution finished (check '{final_pdf_filename}').") # Use dynamic filename
 
     try:
-        final_dot_file_path = Path(FINAL_GRAPHVIZ_SOURCE)
+        # Clean up the dynamically named final .gv file
+        final_dot_file_path = Path(f"{final_graph_base_name}.gv") # Assuming .gv extension
         if final_dot_file_path.exists():
             final_dot_file_path.unlink()
             print(f"Cleaned up intermediate file: {final_dot_file_path}")
@@ -145,22 +178,24 @@ def process_recipe(recipe_draft_path_str: str):
         print(f"Warning: Could not remove intermediate file {final_dot_file_path}: {e}")
 
     try:
-        temp_script_path = Path(temp_script_name)
-        if temp_script_path.exists():
-            temp_script_path.unlink()
-            print(f"Cleaned up final temporary script: {temp_script_path}")
+        # Clean up the dynamically named final script file
+        final_script_path = Path(final_script_name) # Use dynamic script name
+        if final_script_path.exists():
+            final_script_path.unlink()
+            print(f"Cleaned up final temporary script: {final_script_path}")
     except OSError as e:
-        print(f"Warning: Could not clean up final temporary script {temp_script_path}: {e}")
+        print(f"Warning: Could not clean up final temporary script {final_script_path}: {e}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a Graphviz diagram from a recipe draft.")
     parser.add_argument("--recipe_draft", required=True, help="Path to a file containing a recipe draft.")
+    parser.add_argument("--recipe_name", default="recipe", help="Optional name for the recipe output files (defaults to 'recipe').")
     args = parser.parse_args()
 
     try:
-        # Call the main processing function
-        process_recipe(args.recipe_draft)
+        # Call the main processing function, passing the recipe name
+        process_recipe(args.recipe_draft, args.recipe_name)
 
     except FileNotFoundError as e:
         print(f"Error: Input file not found - {e}")
