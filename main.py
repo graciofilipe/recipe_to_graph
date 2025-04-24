@@ -8,6 +8,9 @@ from aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRI
 from pathlib import Path
 import sys # Import sys for sys.exit
 
+# Import the Google Cloud Storage library
+from google.cloud import storage
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
 DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25"
@@ -21,10 +24,48 @@ DEFAULT_MAX_TOKENS = 8048
 # FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
 
 
-def process_recipe(recipe_draft_path_str: str, recipe_name: str):
+def upload_to_gcs(bucket_name: str, source_file_name: str, destination_blob_name: str):
+    """Uploads a file to the specified Google Cloud Storage bucket.
+
+    Args:
+        bucket_name: The name of the GCS bucket.
+        source_file_name: The path to the local file to upload.
+        destination_blob_name: The desired name of the file in the GCS bucket.
+
+    Raises:
+        google.cloud.exceptions.NotFound: If the bucket does not exist.
+        google.cloud.exceptions.Forbidden: If permission is denied to access the bucket or upload the file.
+        FileNotFoundError: If the source file does not exist locally.
+        Exception: For other potential errors during the upload process.
+    """
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(destination_blob_name)
+
+        print(f"Uploading {source_file_name} to gs://{bucket_name}/{destination_blob_name}...")
+        blob.upload_from_filename(source_file_name)
+        print(f"Successfully uploaded {source_file_name} to gs://{bucket_name}/{destination_blob_name}.")
+
+    except FileNotFoundError:
+        print(f"Error: Local file not found: {source_file_name}")
+        # Re-raise the exception to potentially handle it further up the call stack
+        raise
+    except storage.blob.exceptions.NotFound:
+        print(f"Error: Bucket '{bucket_name}' not found or you don't have access.")
+        raise
+    except storage.blob.exceptions.Forbidden:
+        print(f"Error: Permission denied to upload to gs://{bucket_name}/{destination_blob_name}.")
+        raise
+    except Exception as e:
+        print(f"An unexpected error occurred during GCS upload: {e}")
+        raise
+
+
+def process_recipe(recipe_draft_path_str: str, recipe_name: str, gcs_bucket_name: str):
     """
     Processes a recipe draft: converts, standardizes, verifies with user,
-    generates initial and improved graphs, and cleans up intermediate files.
+    generates initial and improved graphs, uploads outputs to GCS, and cleans up intermediate files.
 
     Args:
         recipe_draft_path_str: Path to the recipe draft file.
@@ -89,8 +130,23 @@ def process_recipe(recipe_draft_path_str: str, recipe_name: str):
             with open(output_recipe_path, "w", encoding="utf-8") as f:
                 f.write(standardised_recipe)
             print(f"Successfully wrote standardized recipe to '{output_recipe_filename}'")
+
+            # --- Upload standardized recipe to GCS ---
+            try:
+                upload_to_gcs(gcs_bucket_name, str(output_recipe_path), output_recipe_filename)
+                # Remove local file after successful upload
+                try:
+                    os.remove(output_recipe_path)
+                    print(f"Removed local recipe file: {output_recipe_path}")
+                except OSError as e:
+                    print(f"Warning: Could not remove local file {output_recipe_path}: {e}")
+            except Exception as e:
+                print(f"Warning: Failed to upload {output_recipe_filename} to GCS bucket '{gcs_bucket_name}': {e}")
+            # --- End GCS Upload ---
+
         except IOError as e:
             print(f"Warning: Could not write standardized recipe to file '{output_recipe_filename}': {e}")
+            # Note: If writing fails, we don't attempt GCS upload
 
     else:
         print("\nError: Standardized recipe could not be generated.\n")
@@ -168,6 +224,24 @@ def process_recipe(recipe_draft_path_str: str, recipe_name: str):
     os.system(f"python {final_script_name}") # Use dynamic script name
     print(f"Final graph script execution finished (check '{final_pdf_filename}').") # Use dynamic filename
 
+    # --- Upload final PDF to GCS ---
+    try:
+        # Ensure the local PDF file exists before attempting upload
+        final_pdf_path = Path(final_pdf_filename)
+        if final_pdf_path.is_file():
+             upload_to_gcs(gcs_bucket_name, str(final_pdf_path), final_pdf_filename)
+             # Remove local file after successful upload
+             try:
+                 os.remove(final_pdf_filename)
+                 print(f"Removed local PDF file: {final_pdf_filename}")
+             except OSError as e:
+                 print(f"Warning: Could not remove local file {final_pdf_filename}: {e}")
+        else:
+            print(f"Warning: Final PDF file '{final_pdf_filename}' not found locally. Skipping GCS upload.")
+    except Exception as e:
+        print(f"Warning: Failed to upload {final_pdf_filename} to GCS bucket '{gcs_bucket_name}': {e}")
+    # --- End GCS Upload ---
+
     try:
         # Clean up the dynamically named final .gv file
         final_dot_file_path = Path(f"{final_graph_base_name}.gv") # Assuming .gv extension
@@ -191,11 +265,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a Graphviz diagram from a recipe draft.")
     parser.add_argument("--recipe_draft", required=True, help="Path to a file containing a recipe draft.")
     parser.add_argument("--recipe_name", default="recipe", help="Optional name for the recipe output files (defaults to 'recipe').")
+    parser.add_argument('--gcs_bucket', required=True, help='Google Cloud Storage bucket name for uploading output files.')
     args = parser.parse_args()
 
     try:
-        # Call the main processing function, passing the recipe name
-        process_recipe(args.recipe_draft, args.recipe_name)
+        # Call the main processing function, passing the recipe name and GCS bucket
+        process_recipe(args.recipe_draft, args.recipe_name, args.gcs_bucket)
 
     except FileNotFoundError as e:
         print(f"Error: Input file not found - {e}")
