@@ -2,8 +2,7 @@ import os
 import argparse
 from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from datetime import date # Import date from datetime
-from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
-from aux_funs import create_python_file_from_string
+from aux_funs import create_python_file_from_string, upload_to_gcs
 from aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
 from pathlib import Path
 import sys # Import sys for sys.exit
@@ -24,42 +23,7 @@ DEFAULT_MAX_TOKENS = 8048
 # FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
 
 
-def upload_to_gcs(bucket_name: str, source_file_name: str, destination_blob_name: str):
-    """Uploads a file to the specified Google Cloud Storage bucket.
 
-    Args:
-        bucket_name: The name of the GCS bucket.
-        source_file_name: The path to the local file to upload.
-        destination_blob_name: The desired name of the file in the GCS bucket.
-
-    Raises:
-        google.cloud.exceptions.NotFound: If the bucket does not exist.
-        google.cloud.exceptions.Forbidden: If permission is denied to access the bucket or upload the file.
-        FileNotFoundError: If the source file does not exist locally.
-        Exception: For other potential errors during the upload process.
-    """
-    try:
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(destination_blob_name)
-
-        print(f"Uploading {source_file_name} to gs://{bucket_name}/{destination_blob_name}...")
-        blob.upload_from_filename(source_file_name)
-        print(f"Successfully uploaded {source_file_name} to gs://{bucket_name}/{destination_blob_name}.")
-
-    except FileNotFoundError:
-        print(f"Error: Local file not found: {source_file_name}")
-        # Re-raise the exception to potentially handle it further up the call stack
-        raise
-    except storage.blob.exceptions.NotFound:
-        print(f"Error: Bucket '{bucket_name}' not found or you don't have access.")
-        raise
-    except storage.blob.exceptions.Forbidden:
-        print(f"Error: Permission denied to upload to gs://{bucket_name}/{destination_blob_name}.")
-        raise
-    except Exception as e:
-        print(f"An unexpected error occurred during GCS upload: {e}")
-        raise
 
 
 def process_recipe(recipe_draft_path_str: str, recipe_name: str, gcs_bucket_name: str):
