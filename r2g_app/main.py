@@ -1,9 +1,9 @@
 import os
 import argparse
-from genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
+from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from datetime import date # Import date from datetime
-from aux_funs import create_python_file_from_string, upload_to_gcs
-from aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
+from .aux_funs import create_python_file_from_string, upload_to_gcs
+from .aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
 from pathlib import Path
 import sys # Import sys for sys.exit
 

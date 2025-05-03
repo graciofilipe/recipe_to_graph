@@ -1,5 +1,5 @@
 import streamlit as st
-from main import process_recipe # Import the adapted function
+from r2g_app.main import process_recipe # Import the adapted function
 import re # Import re for GCS link validation/parsing (optional but good practice)
 
 # Helper function to create clickable GCS links (optional)
