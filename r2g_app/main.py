@@ -278,7 +278,8 @@ if __name__ == "__main__":
     try:
         # Call the main processing function, passing PROJECT_ID
         PROJECT_ID = os.getenv("PROJECT_ID")
-        results = process_recipe(recipe_input_text, args.recipe_name, args.gcs_bucket, PROJECT_ID)
+        print('PROJECT ID IS: ', PROJECT_ID)
+        results = process_recipe(recipe_draft_text=recipe_input_text, recipe_name=args.recipe_name, gcs_bucket_name=args.gcs_bucket, project_id=PROJECT_ID)
         # Print results for CLI execution
         print("\n--- Processing Successful ---")
         print(f"Standardized Recipe GCS URI: {results.get('recipe_uri')}")
