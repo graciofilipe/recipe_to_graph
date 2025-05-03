@@ -96,8 +96,6 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
             recipe_input=recipe,
             input_type="txt",
             system_instruction=RE_WRITE_SYS_PROMPT,
-        project_id=PROJECT_ID,
-        location=DEFAULT_VERTEX_LOCATION,
             project_id=PROJECT_ID,
             location=DEFAULT_VERTEX_LOCATION,
             model_name=DEFAULT_MODEL_NAME
