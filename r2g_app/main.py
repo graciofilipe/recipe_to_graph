@@ -277,6 +277,7 @@ if __name__ == "__main__":
 
     try:
         # Call the main processing function, passing PROJECT_ID
+        PROJECT_ID = os.getenv("PROJECT_ID")
         results = process_recipe(recipe_input_text, args.recipe_name, args.gcs_bucket, PROJECT_ID)
         # Print results for CLI execution
         print("\n--- Processing Successful ---")
