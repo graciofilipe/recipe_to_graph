@@ -31,4 +31,4 @@ ENV PYTHONPATH=/app
 
 # Run streamlit_app.py when the container launches
 # Use shell form to allow $PORT substitution
-ENTRYPOINT streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0
+ENTRYPOINT streamlit run st_app.py --server.port=$PORT --server.address=0.0.0.0
