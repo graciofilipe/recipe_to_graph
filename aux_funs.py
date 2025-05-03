@@ -2,6 +2,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+# Import the Google Cloud Storage library
+from google.cloud import storage
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 DEFAULT_FILENAME = "create_graph.py"
