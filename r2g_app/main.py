@@ -152,8 +152,6 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
                 standardised_recipe=standardised_recipe,
                 graph_code=first_pass_graph_code,
                 system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
-        project_id=PROJECT_ID,
-        location=DEFAULT_VERTEX_LOCATION,
                 project_id=PROJECT_ID,
                 location=DEFAULT_VERTEX_LOCATION,
                 model_name=DEFAULT_MODEL_NAME
