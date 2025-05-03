@@ -39,7 +39,7 @@ def _get_gcs_bucket(bucket_name: str) -> Bucket:
         raise RuntimeError(f"Failed to access GCS bucket '{bucket_name}': {e}")
 
 
-def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: str):
+def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: str, project_id: str):
     """
     Processes a recipe draft text: converts, standardizes,
     generates initial and improved graphs, uploads outputs to GCS, and cleans up intermediate files.
@@ -48,6 +48,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
         recipe_draft_text: The raw text of the recipe draft.
         recipe_name: Base name for output files.
         gcs_bucket_name: Name of the GCS bucket to upload results.
+        project_id: Google Cloud Project ID for Vertex AI calls.
 
     Returns:
         A dictionary containing the GCS URIs of the generated recipe text and graph PDF.
@@ -86,7 +87,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
         recipe = draft_to_recipe(
             recipe_draft=recipe_draft_text,
             system_instruction=DRAFT_TO_RECIPE_SYS_PROMPT,
-            project_id=PROJECT_ID,
+            project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
             model_name=DEFAULT_MODEL_NAME
         )
@@ -96,7 +97,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
             recipe_input=recipe,
             input_type="txt",
             system_instruction=RE_WRITE_SYS_PROMPT,
-            project_id=PROJECT_ID,
+            project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
             model_name=DEFAULT_MODEL_NAME
         )
@@ -137,7 +138,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
         first_pass_graph_code = generate_graph(
             standardised_recipe=standardised_recipe,
             system_instruction=GENERATE_GRAPH_SYS_PROMPT,
-            project_id=PROJECT_ID,
+            project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
             model_name=DEFAULT_MODEL_NAME
         )
@@ -152,7 +153,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
                 standardised_recipe=standardised_recipe,
                 graph_code=first_pass_graph_code,
                 system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
-                project_id=PROJECT_ID,
+                project_id=project_id,  # Use function argument
                 location=DEFAULT_VERTEX_LOCATION,
                 model_name=DEFAULT_MODEL_NAME
         )
@@ -275,8 +276,8 @@ if __name__ == "__main__":
 
 
     try:
-        # Call the main processing function
-        results = process_recipe(recipe_input_text, args.recipe_name, args.gcs_bucket)
+        # Call the main processing function, passing PROJECT_ID
+        results = process_recipe(recipe_input_text, args.recipe_name, args.gcs_bucket, PROJECT_ID)
         # Print results for CLI execution
         print("\n--- Processing Successful ---")
         print(f"Standardized Recipe GCS URI: {results.get('recipe_uri')}")
