@@ -3,3 +3,4 @@ google-cloud-storage
 google-generativeai
 google-genai
 graphviz
+streamlit
