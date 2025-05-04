@@ -1,6 +1,10 @@
+import os
 import streamlit as st
 from r2g_app.main import process_recipe # Import the adapted function
 import re # Import re for GCS link validation/parsing (optional but good practice)
+
+PROJECT_ID = os.getenv("PROJECT_ID")
+print('PROJECT ID IS: ', PROJECT_ID)
 
 # Helper function to create clickable GCS links (optional)
 def create_gcs_link(uri):
@@ -34,7 +38,8 @@ if process_button:
                 results = process_recipe(
                     recipe_draft_text=recipe_draft,
                     recipe_name=recipe_name,
-                    gcs_bucket_name=gcs_bucket_name
+                    gcs_bucket_name=gcs_bucket_name,
+                    project_id=PROJECT_ID
                 )
 
                 # --- Display Success ---
