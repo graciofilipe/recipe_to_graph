@@ -49,7 +49,7 @@ def _get_genai_client(
 def _build_generate_content_config(
     system_instruction_text: Optional[str] = None,
     tools: Optional[List[types.Tool]] = None,
-    temperature: float = DEFAULT_TEMPERATURE,
+    temperature: Optional[float] = None,
     top_p: float = DEFAULT_TOP_P,
     max_output_tokens: int = DEFAULT_MAX_TOKENS,
 ) -> types.GenerateContentConfig:
@@ -74,7 +74,7 @@ def _build_generate_content_config(
     ]
 
     config_kwargs: Dict[str, Any] = {
-        "temperature": temperature,
+        "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
         "top_p": top_p,
         "max_output_tokens": max_output_tokens,
         "safety_settings": safety_settings,
@@ -131,7 +131,8 @@ def draft_to_recipe(
     system_instruction: str,
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME
+    model_name: str = DEFAULT_MODEL_NAME,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Transforms a recipe draft into a standardized recipe using a GenAI model.
@@ -158,7 +159,8 @@ def draft_to_recipe(
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
-        tools=tools
+        tools=tools,
+        temperature=temperature
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -172,7 +174,8 @@ def re_write_recipe(
     system_instruction: str,
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME
+    model_name: str = DEFAULT_MODEL_NAME,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Rewrites a recipe from text or a YouTube video URI into a standardized format.
@@ -217,7 +220,10 @@ def re_write_recipe(
         raise ValueError(f"Invalid input_type: '{input_type}'. Must be 'txt' or 'youtube'.")
 
     contents = [types.Content(role="user", parts=parts)]
-    config = _build_generate_content_config(system_instruction_text=system_instruction)
+    config = _build_generate_content_config(
+        system_instruction_text=system_instruction,
+        temperature=temperature
+    )
 
     response_text = _call_generate_content(client, model_name, contents, config)
 
@@ -229,7 +235,8 @@ def generate_graph(
     system_instruction: str,
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME
+    model_name: str = DEFAULT_MODEL_NAME,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Generates initial Graphviz Python code from a standardized recipe.
@@ -256,7 +263,8 @@ def generate_graph(
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
-        tools=tools
+        tools=tools,
+        temperature=temperature
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -270,7 +278,8 @@ def improve_graph(
     system_instruction: str,
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME
+    model_name: str = DEFAULT_MODEL_NAME,
+    temperature: Optional[float] = None
 ) -> str:
     """
     Improves existing Graphviz Python code based on the recipe and instructions.
@@ -304,7 +313,8 @@ def improve_graph(
     tools = [types.Tool(google_search=types.GoogleSearch())]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
-        tools=tools
+        tools=tools,
+        temperature=temperature
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
