@@ -25,61 +25,28 @@ DEFAULT_MAX_TOKENS = 8048
 # FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
 
 
-# Function to get GCS bucket (moved outside process_recipe for clarity)
-def _get_gcs_bucket(bucket_name: str) -> Bucket:
-    """Gets the GCS bucket object."""
-    try:
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        if not bucket.exists():
-             # Basic check, more robust checks might be needed (e.g., permissions)
-            raise ValueError(f"GCS Bucket '{bucket_name}' not found or accessible.")
-        return bucket
-    except Exception as e:
-        raise RuntimeError(f"Failed to access GCS bucket '{bucket_name}': {e}")
-
-
-def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: str, project_id: str):
+# --- New Function: process_text ---
+def process_text(recipe_draft_text: str, project_id: str) -> str:
     """
-    Processes a recipe draft text: converts, standardizes,
-    generates initial and improved graphs, uploads outputs to GCS, and cleans up intermediate files.
+    Processes raw recipe draft text into a standardized format using AI.
 
     Args:
         recipe_draft_text: The raw text of the recipe draft.
-        recipe_name: Base name for output files.
-        gcs_bucket_name: Name of the GCS bucket to upload results.
         project_id: Google Cloud Project ID for Vertex AI calls.
 
     Returns:
-        A dictionary containing the GCS URIs of the generated recipe text and graph PDF.
+        The standardized recipe text as a string.
 
     Raises:
-        ValueError: If input or configuration is invalid (empty text, name, bucket).
-        RuntimeError: If AI processing, GCS operations, or graph script execution fail.
-        Exception: For other unexpected errors.
+        ValueError: If input text is empty.
+        RuntimeError: If AI processing fails.
     """
     # --- Input Validation ---
     if not recipe_draft_text:
         raise ValueError("Recipe draft text cannot be empty.")
-    if not recipe_name:
-        raise ValueError("Recipe name cannot be empty.")
-    if not gcs_bucket_name:
-        raise ValueError("GCS bucket name cannot be empty.")
 
     standardised_recipe = None
-    input_source_description = "input text area" # Updated description
-    # Define date string early for use in all filenames
-    today_str = date.today().strftime("%Y_%m_%d")
-
-    print(f"Processing recipe from {input_source_description}...") # Keep print for server logs
-
-    # --- Get GCS Bucket ---
-    # Moved bucket retrieval here to fail fast if bucket is invalid
-    try:
-        bucket = _get_gcs_bucket(gcs_bucket_name)
-    except (ValueError, RuntimeError) as e:
-        # Re-raise exceptions from _get_gcs_bucket to be caught by Streamlit app
-        raise e
+    print("Processing recipe text...") # Keep print for server logs
 
     # --- AI Processing: Draft -> Structured -> Standardized ---
     try:
@@ -105,15 +72,72 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
     except Exception as e:
         # Catch errors during AI calls (draft_to_recipe, re_write_recipe)
         raise RuntimeError(f"AI processing failed during recipe standardization: {e}") from e
-    # --- End AI Processing ---
 
-
-    # --- Validation & Upload Standardized Recipe Text to GCS ---
+    # --- Validation ---
     if not standardised_recipe:
         # This condition should ideally be caught by the exception handler above,
         # but kept as a safeguard.
         raise RuntimeError("Standardized recipe could not be generated (empty result).")
 
+    print("Recipe text processing finished.")
+    return standardised_recipe
+# --- End process_text ---
+
+
+# Function to get GCS bucket (moved outside process_recipe for clarity)
+def _get_gcs_bucket(bucket_name: str) -> Bucket:
+    """Gets the GCS bucket object."""
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        if not bucket.exists():
+             # Basic check, more robust checks might be needed (e.g., permissions)
+            raise ValueError(f"GCS Bucket '{bucket_name}' not found or accessible.")
+        return bucket
+    except Exception as e:
+        raise RuntimeError(f"Failed to access GCS bucket '{bucket_name}': {e}")
+
+
+# --- New Function: text_to_graph ---
+def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: str, project_id: str) -> dict:
+    """
+    Generates a graph from standardized recipe text, uploads recipe text and graph PDF to GCS,
+    and cleans up intermediate files.
+
+    Args:
+        standardised_recipe: The standardized recipe text.
+        recipe_name: Base name for output files.
+        gcs_bucket_name: Name of the GCS bucket to upload results.
+        project_id: Google Cloud Project ID for Vertex AI calls.
+
+    Returns:
+        A dictionary containing the GCS URIs of the generated recipe text and graph PDF.
+
+    Raises:
+        ValueError: If input or configuration is invalid (empty text, name, bucket).
+        RuntimeError: If GCS operations, AI graph generation, or graph script execution fail.
+        Exception: For other unexpected errors.
+    """
+    # --- Input Validation ---
+    if not standardised_recipe:
+        raise ValueError("Standardized recipe text cannot be empty.")
+    if not recipe_name:
+        raise ValueError("Recipe name cannot be empty.")
+    if not gcs_bucket_name:
+        raise ValueError("GCS bucket name cannot be empty.")
+
+    # Define date string early for use in all filenames
+    today_str = date.today().strftime("%Y_%m_%d")
+    print("Processing standardized recipe for graph generation and GCS upload...")
+
+    # --- Get GCS Bucket ---
+    try:
+        bucket = _get_gcs_bucket(gcs_bucket_name)
+    except (ValueError, RuntimeError) as e:
+        # Re-raise exceptions from _get_gcs_bucket
+        raise e
+
+    # --- Upload Standardized Recipe Text to GCS (Moved to the beginning) ---
     output_recipe_filename = f"{recipe_name}_{today_str}.txt"
     standardized_recipe_gcs_uri = None
     try:
@@ -127,7 +151,7 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
     except Exception as e:
          # Use raise instead of print/sys.exit; includes GCS errors
         raise RuntimeError(f"Failed to upload standardized recipe to GCS bucket '{gcs_bucket_name}': {e}") from e
-    # --- End GCS Upload ---
+    # --- End Upload Standardized Recipe Text to GCS ---
 
 
     # --- AI Processing: Graph Generation & Improvement ---
@@ -239,10 +263,10 @@ def process_recipe(recipe_draft_text: str, recipe_name: str, gcs_bucket_name: st
         "recipe_uri": standardized_recipe_gcs_uri,
         "graph_uri": final_pdf_gcs_uri
     }
-    # --- End Execute Graph Code, Upload PDF, and Cleanup ---
+# --- End text_to_graph ---
 
 
-# --- Command Line Interface (Keep for potential direct use/testing) ---
+# --- Command Line Interface (Updated to use new functions) ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a recipe draft text, generate files, and upload to GCS.")
     # Allow providing draft via text or file
@@ -276,9 +300,25 @@ if __name__ == "__main__":
 
 
     try:
-        # Call the main processing function, passing PROJECT_ID
-        results = process_recipe(recipe_draft_text=recipe_input_text, recipe_name=args.recipe_name, gcs_bucket_name=args.gcs_bucket, project_id=PROJECT_ID)
-        # Print results for CLI execution
+        # 1. Process the text
+        print("--- Starting Text Processing ---")
+        standardized_text = process_text(
+            recipe_draft_text=recipe_input_text,
+            project_id=PROJECT_ID
+        )
+        print("--- Text Processing Finished ---")
+
+        # 2. Generate graph and upload artifacts
+        print("--- Starting Graph Generation and Upload ---")
+        results = text_to_graph(
+            standardised_recipe=standardized_text,
+            recipe_name=args.recipe_name,
+            gcs_bucket_name=args.gcs_bucket,
+            project_id=PROJECT_ID
+        )
+        print("--- Graph Generation and Upload Finished ---")
+
+        # Print final results for CLI execution
         print("\n--- Processing Successful ---")
         print(f"Standardized Recipe GCS URI: {results.get('recipe_uri')}")
         print(f"Final Graph PDF GCS URI: {results.get('graph_uri')}")
