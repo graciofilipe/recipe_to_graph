@@ -1,5 +1,7 @@
 import os
 import streamlit as st
+import base64 # Import base64 for PDF embedding
+import datetime # Import datetime to generate date string
 # Updated import to use the new functions
 from r2g_app.main import process_text, text_to_graph
 from r2g_app.main import revise_recipe
@@ -190,3 +192,32 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             st.markdown(f"**Recipe Graph PDF:** `{graph_uri}`") # Fallback if link creation fails
     else:
         st.warning("Recipe graph GCS URI not found in results.")
+
+    # --- Display PDF and Download Button ---
+    pdf_content_bytes = results.get("pdf_content")
+    if pdf_content_bytes:
+        try:
+            # Generate filename for download
+            today_str = datetime.date.today().strftime("%Y_%m_%d")
+            pdf_filename = f"{st.session_state.recipe_name}_graph_{today_str}.pdf"
+
+            # Add download button
+            st.download_button(
+                label="Download Graph PDF",
+                data=pdf_content_bytes,
+                file_name=pdf_filename,
+                mime="application/pdf",
+            )
+
+            # Display PDF inline using base64 embedding
+            st.subheader("Generated Recipe Graph:")
+            base64_pdf = base64.b64encode(pdf_content_bytes).decode('utf-8')
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error(f"An error occurred while preparing the PDF for display/download: {e}")
+
+    else:
+        st.warning("PDF content not found in results. Cannot display or provide download.")
+    # --- End Display PDF and Download Button ---

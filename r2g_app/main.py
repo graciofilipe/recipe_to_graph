@@ -229,7 +229,15 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         print(f"Final graph script execution finished (check '{final_pdf_path}').") # Keep print
 
         # --- Upload final PDF to GCS ---
+        pdf_content_bytes = None # Initialize variable
         if final_pdf_path.is_file():
+            # Read the PDF content *before* uploading
+            try:
+                pdf_content_bytes = final_pdf_path.read_bytes()
+                print(f"Successfully read {len(pdf_content_bytes)} bytes from {final_pdf_path}") # Keep print
+            except IOError as e:
+                raise RuntimeError(f"Failed to read generated PDF file '{final_pdf_path}': {e}") from e
+
             print(f"Uploading final PDF to GCS: gs://{gcs_bucket_name}/{final_pdf_filename}") # Keep print
             # Use the existing aux_fun for uploading files
             upload_to_gcs(gcs_bucket_name, str(final_pdf_path), final_pdf_filename)
@@ -263,9 +271,16 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
          # This indicates an issue potentially missed by earlier checks
          raise RuntimeError("Processing completed, but failed to obtain GCS URIs for recipe or graph.")
 
+    # Ensure pdf_content_bytes is not None if PDF was supposed to be generated
+    if final_pdf_gcs_uri and pdf_content_bytes is None:
+         # This case should ideally be caught earlier, but serves as a final check
+         raise RuntimeError("PDF was uploaded to GCS, but its content could not be read locally.")
+
+
     return {
         "recipe_uri": standardized_recipe_gcs_uri,
-        "graph_uri": final_pdf_gcs_uri
+        "graph_uri": final_pdf_gcs_uri,
+        "pdf_content": pdf_content_bytes # Add the PDF content bytes
     }
 # --- End text_to_graph ---
 
