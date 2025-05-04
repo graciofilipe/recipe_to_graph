@@ -1,6 +1,7 @@
 import os
 import streamlit as st
-from r2g_app.main import process_recipe # Import the adapted function
+# Updated import to use the new functions
+from r2g_app.main import process_text, text_to_graph
 import re # Import re for GCS link validation/parsing (optional but good practice)
 
 PROJECT_ID = os.getenv("PROJECT_ID")
@@ -32,21 +33,32 @@ if process_button:
         st.error("GCS Bucket Name cannot be empty.")
     else:
         # --- Process Recipe ---
-        with st.spinner("Processing recipe... This may take a minute."):
-            try:
-                # Call the imported function
-                results = process_recipe(
+        try:
+            # 1. Process text first
+            with st.spinner("Processing recipe text..."):
+                standardised_recipe_text = process_text(
                     recipe_draft_text=recipe_draft,
+                    project_id=PROJECT_ID
+                )
+
+            # Display the standardized text
+            st.subheader("Standardized Recipe:")
+            st.text_area("Recipe Text", value=standardised_recipe_text, height=300, disabled=True, key="standardized_text_display") # Added key for potential future use
+
+            # 2. Generate graph and upload artifacts
+            with st.spinner("Generating graph and uploading results..."):
+                results = text_to_graph(
+                    standardised_recipe=standardised_recipe_text,
                     recipe_name=recipe_name,
                     gcs_bucket_name=gcs_bucket_name,
                     project_id=PROJECT_ID
                 )
 
-                # --- Display Success ---
-                st.success("Recipe processed successfully!")
+            # --- Display Success ---
+            st.success("Recipe processed and graph generated successfully!") # Updated success message
 
-                recipe_uri = results.get("recipe_uri")
-                graph_uri = results.get("graph_uri")
+            recipe_uri = results.get("recipe_uri")
+            graph_uri = results.get("graph_uri")
 
                 if recipe_uri:
                     recipe_link = create_gcs_link(recipe_uri)
@@ -69,6 +81,6 @@ if process_button:
 
             except (ValueError, RuntimeError, Exception) as e:
                 # --- Display Error ---
-                st.error(f"An error occurred: {e}")
+                st.error(f"An error occurred: {e}") # This single block catches errors from both functions
 
             # --- End Process Recipe ---
