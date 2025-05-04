@@ -1,11 +1,11 @@
 import os
-import argparse
+# Removed argparse import
 from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from datetime import date # Import date from datetime
 from .aux_funs import create_python_file_from_string, upload_to_gcs
 from .aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
 from pathlib import Path
-import sys # Import sys for sys.exit
+# Removed sys import
 
 # Import the Google Cloud Storage library
 from google.cloud import storage
@@ -265,69 +265,4 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
     }
 # --- End text_to_graph ---
 
-
-# --- Command Line Interface (Updated to use new functions) ---
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process a recipe draft text, generate files, and upload to GCS.")
-    # Allow providing draft via text or file
-    parser.add_argument("--recipe_draft_text", help="Text of the recipe draft.")
-    parser.add_argument("--recipe_draft_file", help="Path to a file containing the recipe draft.")
-    parser.add_argument("--recipe_name", default="recipe", help="Base name for output files (defaults to 'recipe').")
-    parser.add_argument('--gcs_bucket', required=True, help='GCS bucket name for uploading outputs.')
-    args = parser.parse_args()
-
-    # --- Handle input source (text or file) for CLI ---
-    recipe_input_text = None
-    if args.recipe_draft_text:
-        recipe_input_text = args.recipe_draft_text
-    elif args.recipe_draft_file:
-        try:
-            draft_path = Path(args.recipe_draft_file)
-            if not draft_path.is_file():
-                 # Use sys.exit here as it's the CLI entry point
-                 print(f"Error: Recipe draft file not found: {draft_path}")
-                 sys.exit(1)
-            with open(draft_path, "r", encoding="utf-8") as f:
-                recipe_input_text = f.read()
-        except IOError as e:
-             print(f"Error reading file {args.recipe_draft_file}: {e}")
-             sys.exit(1)
-    else:
-        # Require one of the inputs for CLI use
-        print("Error: Please provide either --recipe_draft_text or --recipe_draft_file for CLI execution.")
-        sys.exit(1)
-    # --- End Handle input source ---
-
-
-    try:
-        # 1. Process the text
-        print("--- Starting Text Processing ---")
-        standardized_text = process_text(
-            recipe_draft_text=recipe_input_text,
-            project_id=PROJECT_ID
-        )
-        print("--- Text Processing Finished ---")
-
-        # 2. Generate graph and upload artifacts
-        print("--- Starting Graph Generation and Upload ---")
-        results = text_to_graph(
-            standardised_recipe=standardized_text,
-            recipe_name=args.recipe_name,
-            gcs_bucket_name=args.gcs_bucket,
-            project_id=PROJECT_ID
-        )
-        print("--- Graph Generation and Upload Finished ---")
-
-        # Print final results for CLI execution
-        print("\n--- Processing Successful ---")
-        print(f"Standardized Recipe GCS URI: {results.get('recipe_uri')}")
-        print(f"Final Graph PDF GCS URI: {results.get('graph_uri')}")
-        print("-----------------------------")
-
-    except (ValueError, RuntimeError, Exception) as e:
-        # Catch errors raised by process_recipe or argument parsing for CLI
-        print(f"\n--- Processing Failed ---")
-        print(f"Error: {e}")
-        print("-------------------------")
-        sys.exit(1) # Exit with error code for CLI
-# --- End Command Line Interface ---
+# --- Removed Command Line Interface ---
