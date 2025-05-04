@@ -96,14 +96,15 @@ if st.session_state.standardized_recipe_text and not st.session_state.recipe_app
     approve_button = st.button("Approve Recipe")
 
     st.subheader("Request Changes (Optional):")
-    st.text_area("Describe desired changes:", key="user_feedback_input", height=150) # Value will be handled in logic step
+    # Add value parameter to bind the text area to the user_feedback state
+    st.text_area("Describe desired changes:", value=st.session_state.user_feedback, key="user_feedback_input", height=150)
     submit_changes_button = st.button("Submit Changes")
 
     # --- Handle Button Clicks ---
     if approve_button:
         st.session_state.recipe_approved = True
-        st.session_state.user_feedback = ""
-        st.session_state.user_feedback_input = "" # Clear the input field
+        st.session_state.user_feedback = "" # Clear feedback state, but not the input field directly
+        # Remove: st.session_state.user_feedback_input = ""
         st.session_state.processing_error = None
         st.rerun()
 
@@ -122,8 +123,8 @@ if st.session_state.standardized_recipe_text and not st.session_state.recipe_app
                     )
                 # --- Revision Success ---
                 st.session_state.standardized_recipe_text = revised_recipe_text
-                st.session_state.user_feedback = "" # Clear feedback state
-                st.session_state.user_feedback_input = "" # Reset input field
+                st.session_state.user_feedback = "" # Clear feedback state, input field will clear via rerun + value binding
+                # Remove: st.session_state.user_feedback_input = ""
                 st.rerun() # Refresh to show revised recipe
             except Exception as e:
                 # --- Revision Error ---
