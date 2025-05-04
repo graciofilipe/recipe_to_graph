@@ -3,7 +3,11 @@ import os
 from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 from datetime import date # Import date from datetime
 from .aux_funs import create_python_file_from_string, upload_to_gcs
-from .aux_vars import GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT, RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT
+# Import the new prompt along with existing ones
+from .aux_vars import (
+    GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT,
+    RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT, REVISE_RECIPE_SYS_PROMPT
+)
 from pathlib import Path
 # Removed sys import
 
@@ -264,5 +268,72 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         "graph_uri": final_pdf_gcs_uri
     }
 # --- End text_to_graph ---
+
+
+# --- New Function: revise_recipe ---
+def revise_recipe(original_draft: str, current_standardised_recipe: str, user_feedback: str, project_id: str) -> str:
+    '''
+    Revises a standardized recipe based on user feedback using an AI model.
+
+    Args:
+        original_draft: The initial recipe draft (for context).
+        current_standardised_recipe: The recipe version the user reviewed.
+        user_feedback: The changes requested by the user.
+        project_id: Google Cloud Project ID.
+
+    Returns:
+        The revised standardized recipe text.
+
+    Raises:
+        RuntimeError: If AI revision fails.
+    '''
+    print("Revising recipe based on user feedback...") # Keep print for server logs
+
+    # Construct input text for the AI model
+    # Consider if original_draft is needed contextually. If prompts handle revision well without it, it can be omitted.
+    # Let's include it for now for better context.
+    input_text = f"""
+User Feedback:
+---
+{user_feedback}
+---
+
+Current Standardized Recipe:
+---
+{current_standardised_recipe}
+---
+
+Original Recipe Draft (for context):
+---
+{original_draft}
+---
+
+Based *only* on the User Feedback provided above, please revise the Current Standardized Recipe. Maintain the exact same structure and formatting rules as the Current Standardized Recipe. Output *only* the full, revised standardized recipe text.
+"""
+
+    try:
+        # Assuming DEFAULT_VERTEX_LOCATION and DEFAULT_MODEL_NAME are accessible
+        # If not, ensure they are imported or passed correctly.
+        # Check if these constants exist in the scope of main.py, if not import from aux_vars
+        revised_text = re_write_recipe(
+            recipe_input=input_text,
+            input_type="txt",
+            system_instruction=REVISE_RECIPE_SYS_PROMPT, # Use the new prompt
+            project_id=project_id,
+            location=DEFAULT_VERTEX_LOCATION,
+            model_name=DEFAULT_MODEL_NAME
+        )
+        if not revised_text:
+            raise RuntimeError("AI revision returned an empty result.")
+
+        print("Recipe revision finished.") # Keep print for server logs
+        return revised_text
+
+    except Exception as e:
+        print(f"Error during recipe revision: {e}") # Keep print for server logs
+        # Re-raise the exception to be caught by the Streamlit app
+        raise RuntimeError(f"AI processing failed during recipe revision: {e}") from e
+# --- End revise_recipe ---
+
 
 # --- Removed Command Line Interface ---
