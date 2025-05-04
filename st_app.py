@@ -60,27 +60,27 @@ if process_button:
             recipe_uri = results.get("recipe_uri")
             graph_uri = results.get("graph_uri")
 
-                if recipe_uri:
-                    recipe_link = create_gcs_link(recipe_uri)
-                    if recipe_link:
-                         st.markdown(f"**Standardized Recipe:** [View in GCS Console]({recipe_link}) (`{recipe_uri}`)")
-                    else:
-                         st.markdown(f"**Standardized Recipe:** `{recipe_uri}`") # Fallback if link creation fails
+            if recipe_uri:
+                recipe_link = create_gcs_link(recipe_uri)
+                if recipe_link:
+                        st.markdown(f"**Standardized Recipe:** [View in GCS Console]({recipe_link}) (`{recipe_uri}`)")
                 else:
-                    st.warning("Standardized recipe GCS URI not found in results.")
+                        st.markdown(f"**Standardized Recipe:** `{recipe_uri}`") # Fallback if link creation fails
+            else:
+                st.warning("Standardized recipe GCS URI not found in results.")
 
-                if graph_uri:
-                    graph_link = create_gcs_link(graph_uri)
-                    if graph_link:
-                        st.markdown(f"**Recipe Graph PDF:** [View in GCS Console]({graph_link}) (`{graph_uri}`)")
-                    else:
-                        st.markdown(f"**Recipe Graph PDF:** `{graph_uri}`") # Fallback if link creation fails
+            if graph_uri:
+                graph_link = create_gcs_link(graph_uri)
+                if graph_link:
+                    st.markdown(f"**Recipe Graph PDF:** [View in GCS Console]({graph_link}) (`{graph_uri}`)")
                 else:
-                    st.warning("Recipe graph GCS URI not found in results.")
+                    st.markdown(f"**Recipe Graph PDF:** `{graph_uri}`") # Fallback if link creation fails
+            else:
+                st.warning("Recipe graph GCS URI not found in results.")
 
 
-            except (ValueError, RuntimeError, Exception) as e:
-                # --- Display Error ---
-                st.error(f"An error occurred: {e}") # This single block catches errors from both functions
+        except (ValueError, RuntimeError, Exception) as e:
+            # --- Display Error ---
+            st.error(f"An error occurred: {e}") # This single block catches errors from both functions
 
-            # --- End Process Recipe ---
+        # --- End Process Recipe ---
