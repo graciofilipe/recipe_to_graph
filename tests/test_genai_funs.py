@@ -18,28 +18,28 @@ class TestGenAIFuns(unittest.TestCase):
     
     def test_re_write_recipe(self):
         # Call the function with a dummy recipe
-        recipe = "This is a test recipe"
+        recipe_input = "This is a test recipe"
         # Call the function
-        result = re_write_recipe(project_id=PROJECT_ID, recipe=recipe, input_type="txt", si_text="test_prompt")
+        result = re_write_recipe(project_id=PROJECT_ID, recipe_input=recipe_input, input_type="txt", system_instruction="test_prompt")
         # Check if the result is a non empty string
         self.assertIsInstance(result, str)
         self.assertNotEqual(result, "")
         
     def test_generate_graph(self):
         # Call the function with a dummy recipe
-        recipe = "This is a test recipe"
+        recipe_input = "This is a test recipe" # Corrected variable name
         # Call the function
-        result = generate_graph(project_id=PROJECT_ID, recipe=recipe, si_text="test_prompt")
+        result = generate_graph(project_id=PROJECT_ID, recipe_input=recipe_input, system_instruction="test_prompt") # Corrected argument name
         # Check if the result is a non empty string
         self.assertIsInstance(result, str)
         self.assertNotEqual(result, "")
 
     def test_improve_graph(self):
         # Call the function with a dummy recipe
-        recipe = "This is a test recipe"
+        recipe_input = "This is a test recipe" # Corrected variable name
         graph_code = "graph code"
         # Call the function
-        result = improve_graph(project_id=PROJECT_ID, recipe=recipe, graph_code=graph_code, si_text="test_prompt")
+        result = improve_graph(project_id=PROJECT_ID, recipe_input=recipe_input, graph_code=graph_code, system_instruction="test_prompt") # Corrected argument name
         # Check if the result is a non empty string
         self.assertIsInstance(result, str)
         self.assertNotEqual(result, "")

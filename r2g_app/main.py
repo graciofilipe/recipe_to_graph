@@ -60,7 +60,8 @@ def process_text(recipe_draft_text: str, project_id: str) -> str:
             system_instruction=DRAFT_TO_RECIPE_SYS_PROMPT,
             project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
         )
 
         print("Standardizing structured recipe...") # Keep print for server logs
@@ -70,7 +71,8 @@ def process_text(recipe_draft_text: str, project_id: str) -> str:
             system_instruction=RE_WRITE_SYS_PROMPT,
             project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
         )
 
     except Exception as e:
@@ -168,7 +170,8 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
             system_instruction=GENERATE_GRAPH_SYS_PROMPT,
             project_id=project_id,  # Use function argument
             location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.2  # Add temperature
         )
         print("Initial graph code generated.") # Keep print
 
@@ -183,7 +186,8 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
                 system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
                 project_id=project_id,  # Use function argument
                 location=DEFAULT_VERTEX_LOCATION,
-                model_name=DEFAULT_MODEL_NAME
+                model_name=DEFAULT_MODEL_NAME,
+                temperature=0.2  # Add temperature
         )
         print("Graph code improvement finished.") # Keep print
 
@@ -336,7 +340,8 @@ Based *only* on the User Feedback provided above, please revise the Current Stan
             system_instruction=REVISE_RECIPE_SYS_PROMPT, # Use the new prompt
             project_id=project_id,
             location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
         )
         if not revised_text:
             raise RuntimeError("AI revision returned an empty result.")
