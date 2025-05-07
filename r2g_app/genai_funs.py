@@ -10,7 +10,7 @@ DEFAULT_VERTEX_LOCATION = "us-central1"
 #DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25" 
 DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
 DEFAULT_TOP_P = 1.0
-DEFAULT_MAX_TOKENS = 8048
+DEFAULT_MAX_TOKENS = 33333
 
 # Temperature settings for different generation tasks
 RECIPE_DRAFT_TEMP = 0.8
