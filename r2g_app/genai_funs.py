@@ -4,13 +4,21 @@ from typing import List, Optional, Dict, Any, Literal
 from google import genai
 from google.genai import types
 
-DEFAULT_VERTEX_PROJECT_ID = os.getenv("PROJECT_ID")
+# --- Centralized Configuration Constants ---
+PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
 #DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25" 
 DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
-DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
+
+# Temperature settings for different generation tasks
+RECIPE_DRAFT_TEMP = 0.8
+RECIPE_REWRITE_TEMP = 0.8
+RECIPE_REVISE_TEMP = 0.8  # Assuming revision might need similar creativity
+GRAPH_GEN_TEMP = 0.2
+GRAPH_IMPROVE_TEMP = 0.2
+# --- End of Configuration Constants ---
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def _get_genai_client(
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
+    project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION
 ) -> genai.Client:
     """
@@ -37,8 +45,8 @@ def _get_genai_client(
         Exception: If client initialization fails for other reasons.
     """
     if not project_id:
-        logger.error("Vertex AI Project ID not provided or found in environment variables.")
-        raise ValueError("Vertex AI Project ID is required.")
+        logger.error("Project ID not provided or found in environment variables.")
+        raise ValueError("Project ID is required.")
     try:
         client = genai.Client(vertexai=True, project=project_id, location=location)
         logger.info(f"Initialized GenAI client for project '{project_id}' in '{location}'.")
@@ -50,7 +58,7 @@ def _get_genai_client(
 def _build_generate_content_config(
     system_instruction_text: Optional[str] = None,
     tools: Optional[List[types.Tool]] = None,
-    temperature: Optional[float] = None,
+    temperature: Optional[float] = None,  # Explicit temperature required
     top_p: float = DEFAULT_TOP_P,
     max_output_tokens: int = DEFAULT_MAX_TOKENS,
 ) -> types.GenerateContentConfig:
@@ -67,6 +75,10 @@ def _build_generate_content_config(
     Returns:
         A configured types.GenerateContentConfig object.
     """
+    if temperature is None:
+        # Raise an error or default? Let's raise for now to enforce explicit setting.
+        raise ValueError("Temperature must be explicitly provided to _build_generate_content_config.")
+
     safety_settings = [
         types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
         types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
@@ -75,7 +87,7 @@ def _build_generate_content_config(
     ]
 
     config_kwargs: Dict[str, Any] = {
-        "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
+        "temperature": temperature,
         "top_p": top_p,
         "max_output_tokens": max_output_tokens,
         "safety_settings": safety_settings,
@@ -130,10 +142,10 @@ def _call_generate_content(
 def draft_to_recipe(
     recipe_draft: str,
     system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
+    project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.8
+    temperature: float = RECIPE_DRAFT_TEMP # Use specific constant
 ) -> str:
     """
     Transforms a recipe draft into a standardized recipe using a GenAI model.
@@ -153,7 +165,7 @@ def draft_to_recipe(
         RuntimeError: If the API call fails or returns an empty response.
     """
     logger.info("Running the draft-to-recipe agent...")
-    client = _get_genai_client(project_id, location)
+    client = _get_genai_client(project_id, location) # Uses PROJECT_ID by default now
 
     text_part = types.Part.from_text(text=recipe_draft)
     contents = [types.Content(role="user", parts=[text_part])]
@@ -173,10 +185,10 @@ def re_write_recipe(
     recipe_input: str,
     input_type: Literal["txt", "youtube"],
     system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
+    project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.8
+    temperature: float = RECIPE_REWRITE_TEMP # Use specific constant
 ) -> str:
     """
     Rewrites a recipe from text or a YouTube video URI into a standardized format.
@@ -197,7 +209,7 @@ def re_write_recipe(
         RuntimeError: If the API call fails or returns an empty response.
     """
     logger.info(f"Running the re-writing agent for input type: {input_type}...")
-    client = _get_genai_client(project_id, location)
+    client = _get_genai_client(project_id, location) # Uses PROJECT_ID by default now
 
     parts: List[types.Part] = []
     if input_type == "txt":
@@ -234,10 +246,10 @@ def re_write_recipe(
 def generate_graph(
     standardised_recipe: str,
     system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
+    project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.2
+    temperature: float = GRAPH_GEN_TEMP # Use specific constant
 ) -> str:
     """
     Generates initial Graphviz Python code from a standardized recipe.
@@ -257,7 +269,7 @@ def generate_graph(
         RuntimeError: If the API call fails or returns an empty response.
     """
     logger.info("Running the graph generation agent...")
-    client = _get_genai_client(project_id, location)
+    client = _get_genai_client(project_id, location) # Uses PROJECT_ID by default now
 
     text_part = types.Part.from_text(text=standardised_recipe)
     contents = [types.Content(role="user", parts=[text_part])]
@@ -277,10 +289,10 @@ def improve_graph(
     standardised_recipe: str,
     graph_code: str,
     system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
+    project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.2
+    temperature: float = GRAPH_IMPROVE_TEMP # Use specific constant
 ) -> str:
     """
     Improves existing Graphviz Python code based on the recipe and instructions.
@@ -301,7 +313,7 @@ def improve_graph(
         RuntimeError: If the API call fails or returns an empty response.
     """
     logger.info("Running the graph improvement agent...")
-    client = _get_genai_client(project_id, location)
+    client = _get_genai_client(project_id, location) # Uses PROJECT_ID by default now
 
     recipe_part = types.Part.from_text(
         text=f"## Standardized Recipe Context:\n\n{standardised_recipe}\n\n"

@@ -1,6 +1,12 @@
 import os
 # Removed argparse import
 from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
+# Import constants from genai_funs
+from .genai_funs import (
+    PROJECT_ID, DEFAULT_VERTEX_LOCATION, DEFAULT_MODEL_NAME,
+    RECIPE_DRAFT_TEMP, RECIPE_REWRITE_TEMP, RECIPE_REVISE_TEMP,
+    GRAPH_GEN_TEMP, GRAPH_IMPROVE_TEMP
+)
 from datetime import date # Import date from datetime
 from .aux_funs import create_python_file_from_string, upload_to_gcs
 # Import the new prompt along with existing ones
@@ -16,12 +22,6 @@ from google.cloud import storage
 # Import Blob and Bucket for uploading string data and bucket operations
 from google.cloud.storage import Blob, Bucket
 
-PROJECT_ID = os.getenv("PROJECT_ID")
-DEFAULT_VERTEX_LOCATION = "us-central1"
-DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
-DEFAULT_TEMPERATURE = 0.5
-DEFAULT_TOP_P = 1.0
-DEFAULT_MAX_TOKENS = 8048
 
 # DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py" # Removed, generated dynamically
 # STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt" # Removed, generated dynamically
@@ -55,24 +55,26 @@ def process_text(recipe_draft_text: str, project_id: str) -> str:
     # --- AI Processing: Draft -> Structured -> Standardized ---
     try:
         print("Converting draft to structured recipe...") # Keep print for server logs
+        # Use imported constants
         recipe = draft_to_recipe(
             recipe_draft=recipe_draft_text,
             system_instruction=DRAFT_TO_RECIPE_SYS_PROMPT,
-            project_id=project_id,  # Use function argument
-            location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME,
-            temperature=0.8  # Add temperature
+            project_id=project_id,  # Pass explicitly
+            location=DEFAULT_VERTEX_LOCATION, # Use imported constant
+            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            temperature=RECIPE_DRAFT_TEMP # Use imported constant
         )
 
         print("Standardizing structured recipe...") # Keep print for server logs
+        # Use imported constants
         standardised_recipe = re_write_recipe(
             recipe_input=recipe,
             input_type="txt",
             system_instruction=RE_WRITE_SYS_PROMPT,
-            project_id=project_id,  # Use function argument
-            location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME,
-            temperature=0.8  # Add temperature
+            project_id=project_id,  # Pass explicitly
+            location=DEFAULT_VERTEX_LOCATION, # Use imported constant
+            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            temperature=RECIPE_REWRITE_TEMP # Use imported constant
         )
 
     except Exception as e:
@@ -165,13 +167,14 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
     improved_graph_code = None
     try:
         print("Generating initial graph code...") # Keep print
+        # Use imported constants
         first_pass_graph_code = generate_graph(
             standardised_recipe=standardised_recipe,
             system_instruction=GENERATE_GRAPH_SYS_PROMPT,
-            project_id=project_id,  # Use function argument
-            location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME,
-            temperature=0.2  # Add temperature
+            project_id=project_id,  # Pass explicitly
+            location=DEFAULT_VERTEX_LOCATION, # Use imported constant
+            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            temperature=GRAPH_GEN_TEMP # Use imported constant
         )
         print("Initial graph code generated.") # Keep print
 
@@ -180,14 +183,15 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
              raise RuntimeError("Initial graph code generation returned empty result.")
 
         print("Improving graph code...") # Keep print
+        # Use imported constants
         improved_graph_code = improve_graph(
                 standardised_recipe=standardised_recipe,
                 graph_code=first_pass_graph_code,
                 system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
-                project_id=project_id,  # Use function argument
-                location=DEFAULT_VERTEX_LOCATION,
-                model_name=DEFAULT_MODEL_NAME,
-                temperature=0.2  # Add temperature
+                project_id=project_id,  # Pass explicitly
+                location=DEFAULT_VERTEX_LOCATION, # Use imported constant
+                model_name=DEFAULT_MODEL_NAME, # Use imported constant
+                temperature=GRAPH_IMPROVE_TEMP # Use imported constant
         )
         print("Graph code improvement finished.") # Keep print
 
@@ -338,10 +342,10 @@ Based *only* on the User Feedback provided above, please revise the Current Stan
             recipe_input=input_text,
             input_type="txt",
             system_instruction=REVISE_RECIPE_SYS_PROMPT, # Use the new prompt
-            project_id=project_id,
-            location=DEFAULT_VERTEX_LOCATION,
-            model_name=DEFAULT_MODEL_NAME,
-            temperature=0.8  # Add temperature
+            project_id=project_id, # Pass explicitly
+            location=DEFAULT_VERTEX_LOCATION, # Use imported constant
+            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            temperature=RECIPE_REVISE_TEMP # Use imported constant
         )
         if not revised_text:
             raise RuntimeError("AI revision returned an empty result.")
