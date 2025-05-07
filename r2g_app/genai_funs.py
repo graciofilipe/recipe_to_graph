@@ -147,7 +147,8 @@ def draft_to_recipe(
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: float = RECIPE_DRAFT_TEMP # Use specific constant
+    temperature: float = RECIPE_DRAFT_TEMP, # Use specific constant
+    max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
     """
     Transforms a recipe draft into a standardized recipe using a GenAI model.
@@ -175,7 +176,8 @@ def draft_to_recipe(
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
         tools=tools,
-        temperature=temperature
+        temperature=temperature,
+        max_output_tokens=max_output_tokens
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -190,7 +192,8 @@ def re_write_recipe(
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: float = RECIPE_REWRITE_TEMP # Use specific constant
+    temperature: float = RECIPE_REWRITE_TEMP, # Use specific constant
+    max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
     """
     Rewrites a recipe from text or a YouTube video URI into a standardized format.
@@ -237,7 +240,8 @@ def re_write_recipe(
     contents = [types.Content(role="user", parts=parts)]
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
-        temperature=temperature
+        temperature=temperature,
+        max_output_tokens=max_output_tokens
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -251,7 +255,8 @@ def generate_graph(
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: float = GRAPH_GEN_TEMP # Use specific constant
+    temperature: float = GRAPH_GEN_TEMP, # Use specific constant
+    max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
     """
     Generates initial Graphviz Python code from a standardized recipe.
@@ -279,7 +284,8 @@ def generate_graph(
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
         tools=tools,
-        temperature=temperature
+        temperature=temperature,
+        max_output_tokens=max_output_tokens
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
@@ -294,7 +300,8 @@ def improve_graph(
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: float = GRAPH_IMPROVE_TEMP # Use specific constant
+    temperature: float = GRAPH_IMPROVE_TEMP, # Use specific constant
+    max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
     """
     Improves existing Graphviz Python code based on the recipe and instructions.
@@ -329,7 +336,8 @@ def improve_graph(
     config = _build_generate_content_config(
         system_instruction_text=system_instruction,
         tools=tools,
-        temperature=temperature
+        temperature=temperature,
+        max_output_tokens=max_output_tokens
     )
 
     response_text = _call_generate_content(client, model_name, contents, config)
