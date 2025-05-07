@@ -124,7 +124,8 @@ def _call_generate_content(
         Exception: For other unexpected errors during the API call.
     """
     try:
-        logger.debug(f"Calling model '{model_name}' with config: {config}")
+        logger.info(f"Calling model '{model_name}' with contents: {contents}") # Log input
+        # logger.debug(f"Calling model '{model_name}' with config: {config}") # Keep debug for config if needed
         response = client.models.generate_content(
             model=model_name,
             contents=contents,
@@ -133,7 +134,8 @@ def _call_generate_content(
         if not hasattr(response, 'text') or not response.text:
              logger.warning(f"GenAI response for model '{model_name}' was empty or lacked text.")
              raise RuntimeError("Received empty response from AI model.")
-        logger.debug(f"Received response text (length {len(response.text)}) from model '{model_name}'.")
+        # logger.debug(f"Received response text (length {len(response.text)}) from model '{model_name}'.") # Replaced by info below
+        logger.info(f"Received response text from model '{model_name}': {response.text}") # Log output
         return response.text
     except Exception as e:
         logger.exception(f"GenAI API call to model '{model_name}' failed: {e}")
