@@ -132,7 +132,7 @@ def draft_to_recipe(
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = None
+    temperature: Optional[float] = 0.8
 ) -> str:
     """
     Transforms a recipe draft into a standardized recipe using a GenAI model.
@@ -175,7 +175,7 @@ def re_write_recipe(
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = None
+    temperature: Optional[float] = 0.8
 ) -> str:
     """
     Rewrites a recipe from text or a YouTube video URI into a standardized format.
@@ -236,7 +236,7 @@ def generate_graph(
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = None
+    temperature: Optional[float] = 0.2
 ) -> str:
     """
     Generates initial Graphviz Python code from a standardized recipe.
@@ -279,7 +279,7 @@ def improve_graph(
     project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
     model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = None
+    temperature: Optional[float] = 0.2
 ) -> str:
     """
     Improves existing Graphviz Python code based on the recipe and instructions.
