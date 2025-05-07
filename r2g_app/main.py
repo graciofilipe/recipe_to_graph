@@ -18,7 +18,7 @@ from google.cloud.storage import Blob, Bucket
 
 PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
-DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-03-25"
+DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
 DEFAULT_TEMPERATURE = 0.5
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
