@@ -1,323 +1,359 @@
-import logging
 import os
-from typing import List, Optional, Dict, Any, Literal
-from google import genai
-from google.genai import types
+# Removed argparse import
+from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
+from datetime import date # Import date from datetime
+from .aux_funs import create_python_file_from_string, upload_to_gcs
+# Import the new prompt along with existing ones
+from .aux_vars import (
+    GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT,
+    RE_WRITE_SYS_PROMPT, DRAFT_TO_RECIPE_SYS_PROMPT, REVISE_RECIPE_SYS_PROMPT
+)
+from pathlib import Path
+# Removed sys import
 
-DEFAULT_VERTEX_PROJECT_ID = os.getenv("PROJECT_ID")
+# Import the Google Cloud Storage library
+from google.cloud import storage
+# Import Blob and Bucket for uploading string data and bucket operations
+from google.cloud.storage import Blob, Bucket
+
+PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
-DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25" # "#"gemini-2.5-pro-preview-05-06"
-DEFAULT_TEMPERATURE = 0.2
+DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
+DEFAULT_TEMPERATURE = 0.5
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 8048
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py" # Removed, generated dynamically
+# STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt" # Removed, generated dynamically
+# INITIAL_GRAPHVIZ_SOURCE = "initial_recipe_flow" # Removed, generated dynamically
+# FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
 
-def _get_genai_client(
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
-    location: str = DEFAULT_VERTEX_LOCATION
-) -> genai.Client:
+
+# --- New Function: process_text ---
+def process_text(recipe_draft_text: str, project_id: str) -> str:
     """
-    Initializes and returns the Generative AI client for Vertex AI.
+    Processes raw recipe draft text into a standardized format using AI.
 
     Args:
-        project_id: Google Cloud project ID. Defaults to env variable 'PROJECT_ID'.
-        location: Google Cloud location for the Vertex AI endpoint.
+        recipe_draft_text: The raw text of the recipe draft.
+        project_id: Google Cloud Project ID for Vertex AI calls.
 
     Returns:
-        An initialized genai.Client instance.
+        The standardized recipe text as a string.
 
     Raises:
-        ValueError: If project_id is not provided or found.
-        Exception: If client initialization fails for other reasons.
+        ValueError: If input text is empty.
+        RuntimeError: If AI processing fails.
     """
-    if not project_id:
-        logger.error("Vertex AI Project ID not provided or found in environment variables.")
-        raise ValueError("Vertex AI Project ID is required.")
+    # --- Input Validation ---
+    if not recipe_draft_text:
+        raise ValueError("Recipe draft text cannot be empty.")
+
+    standardised_recipe = None
+    print("Processing recipe text...") # Keep print for server logs
+
+    # --- AI Processing: Draft -> Structured -> Standardized ---
     try:
-        client = genai.Client(vertexai=True, project=project_id, location=location)
-        logger.info(f"Initialized GenAI client for project '{project_id}' in '{location}'.")
-        return client
-    except Exception as e:
-        logger.exception(f"Failed to initialize GenAI client: {e}")
-        raise
-
-def _build_generate_content_config(
-    system_instruction_text: Optional[str] = None,
-    tools: Optional[List[types.Tool]] = None,
-    temperature: Optional[float] = None,
-    top_p: float = DEFAULT_TOP_P,
-    max_output_tokens: int = DEFAULT_MAX_TOKENS,
-) -> types.GenerateContentConfig:
-    """
-    Builds the GenerateContentConfig object for the API call.
-
-    Args:
-        system_instruction_text: The system prompt text, if any.
-        tools: A list of tools (e.g., GoogleSearch) for the model, if any.
-        temperature: Controls randomness (lower is more deterministic).
-        top_p: Controls diversity via nucleus sampling.
-        max_output_tokens: Maximum number of tokens to generate.
-
-    Returns:
-        A configured types.GenerateContentConfig object.
-    """
-    safety_settings = [
-        types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
-        types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
-        types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_NONE"),
-        types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
-    ]
-
-    config_kwargs: Dict[str, Any] = {
-        "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
-        "top_p": top_p,
-        "max_output_tokens": max_output_tokens,
-        "safety_settings": safety_settings,
-        "candidate_count": 1
-    }
-    if system_instruction_text:
-        config_kwargs["system_instruction"] = [types.Part.from_text(text=system_instruction_text)]
-    if tools:
-        config_kwargs["tools"] = tools
-    config_kwargs["thinking_config"] = types.ThinkingConfig(include_thoughts=True)
-
-    return types.GenerateContentConfig(**config_kwargs)
-
-def _call_generate_content(
-    client: genai.Client,
-    model_name: str,
-    contents: List[types.Content],
-    config: types.GenerateContentConfig
-) -> str:
-    """
-    Calls the generate_content API, handles errors, and returns the text response.
-
-    Args:
-        client: The initialized genai.Client.
-        model_name: The name of the model to use.
-        contents: The list of content parts (user input).
-        config: The generation configuration.
-
-    Returns:
-        The text part of the model's response.
-
-    Raises:
-        RuntimeError: If the API call fails or returns an empty response.
-        Exception: For other unexpected errors during the API call.
-    """
-    try:
-        logger.debug(f"Calling model '{model_name}' with config: {config}")
-        response = client.models.generate_content(
-            model=model_name,
-            contents=contents,
-            config=config,
+        print("Converting draft to structured recipe...") # Keep print for server logs
+        recipe = draft_to_recipe(
+            recipe_draft=recipe_draft_text,
+            system_instruction=DRAFT_TO_RECIPE_SYS_PROMPT,
+            project_id=project_id,  # Use function argument
+            location=DEFAULT_VERTEX_LOCATION,
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
         )
-        if not hasattr(response, 'text') or not response.text:
-             logger.warning(f"GenAI response for model '{model_name}' was empty or lacked text.")
-             raise RuntimeError("Received empty response from AI model.")
-        logger.debug(f"Received response text (length {len(response.text)}) from model '{model_name}'.")
-        return response.text
+
+        print("Standardizing structured recipe...") # Keep print for server logs
+        standardised_recipe = re_write_recipe(
+            recipe_input=recipe,
+            input_type="txt",
+            system_instruction=RE_WRITE_SYS_PROMPT,
+            project_id=project_id,  # Use function argument
+            location=DEFAULT_VERTEX_LOCATION,
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
+        )
+
     except Exception as e:
-        logger.exception(f"GenAI API call to model '{model_name}' failed: {e}")
-        raise RuntimeError(f"GenAI API call failed: {e}") from e
+        # Catch errors during AI calls (draft_to_recipe, re_write_recipe)
+        raise RuntimeError(f"AI processing failed during recipe standardization: {e}") from e
 
-def draft_to_recipe(
-    recipe_draft: str,
-    system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
-    location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.8
-) -> str:
+    # --- Validation ---
+    if not standardised_recipe:
+        # This condition should ideally be caught by the exception handler above,
+        # but kept as a safeguard.
+        raise RuntimeError("Standardized recipe could not be generated (empty result).")
+
+    print("Recipe text processing finished.")
+    return standardised_recipe
+# --- End process_text ---
+
+
+# Function to get GCS bucket (moved outside process_recipe for clarity)
+def _get_gcs_bucket(bucket_name: str) -> Bucket:
+    """Gets the GCS bucket object."""
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        if not bucket.exists():
+             # Basic check, more robust checks might be needed (e.g., permissions)
+            raise ValueError(f"GCS Bucket '{bucket_name}' not found or accessible.")
+        return bucket
+    except Exception as e:
+        raise RuntimeError(f"Failed to access GCS bucket '{bucket_name}': {e}")
+
+
+# --- New Function: text_to_graph ---
+def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: str, project_id: str) -> dict:
     """
-    Transforms a recipe draft into a standardized recipe using a GenAI model.
+    Generates a graph from standardized recipe text, uploads recipe text and graph PDF to GCS,
+    and cleans up intermediate files.
 
     Args:
-        recipe_draft: The raw text draft of the recipe.
-        system_instruction: The system prompt guiding the AI's behavior.
-        project_id: Google Cloud project ID for Vertex AI. Defaults to env variable.
-        location: Google Cloud location for Vertex AI endpoint.
-        model_name: The specific GenAI model to use.
+        standardised_recipe: The standardized recipe text.
+        recipe_name: Base name for output files.
+        gcs_bucket_name: Name of the GCS bucket to upload results.
+        project_id: Google Cloud Project ID for Vertex AI calls.
 
     Returns:
-        The standardized recipe text generated by the AI.
+        A dictionary containing the GCS URIs of the generated recipe text and graph PDF.
 
     Raises:
-        ValueError: If project_id is not provided.
-        RuntimeError: If the API call fails or returns an empty response.
+        ValueError: If input or configuration is invalid (empty text, name, bucket).
+        RuntimeError: If GCS operations, AI graph generation, or graph script execution fail.
+        Exception: For other unexpected errors.
     """
-    logger.info("Running the draft-to-recipe agent...")
-    client = _get_genai_client(project_id, location)
+    # --- Input Validation ---
+    if not standardised_recipe:
+        raise ValueError("Standardized recipe text cannot be empty.")
+    if not recipe_name:
+        raise ValueError("Recipe name cannot be empty.")
+    if not gcs_bucket_name:
+        raise ValueError("GCS bucket name cannot be empty.")
 
-    text_part = types.Part.from_text(text=recipe_draft)
-    contents = [types.Content(role="user", parts=[text_part])]
-    tools = [types.Tool(google_search=types.GoogleSearch())]
-    config = _build_generate_content_config(
-        system_instruction_text=system_instruction,
-        tools=tools,
-        temperature=temperature
-    )
+    # Define date string early for use in all filenames
+    today_str = date.today().strftime("%Y_%m_%d")
+    print("Processing standardized recipe for graph generation and GCS upload...")
 
-    response_text = _call_generate_content(client, model_name, contents, config)
+    # --- Get GCS Bucket ---
+    try:
+        bucket = _get_gcs_bucket(gcs_bucket_name)
+    except (ValueError, RuntimeError) as e:
+        # Re-raise exceptions from _get_gcs_bucket
+        raise e
 
-    logger.info("Finished the draft-to-recipe agent.")
-    return response_text
+    # --- Upload Standardized Recipe Text to GCS (Moved to the beginning) ---
+    output_recipe_filename = f"{recipe_name}_{today_str}.txt"
+    standardized_recipe_gcs_uri = None
+    try:
+        print(f"Uploading standardized recipe to GCS: gs://{gcs_bucket_name}/{output_recipe_filename}") # Keep print
+        blob = bucket.blob(output_recipe_filename)
+        # Upload directly from string
+        blob.upload_from_string(standardised_recipe, content_type='text/plain; charset=utf-8') # Specify encoding
+        standardized_recipe_gcs_uri = f"gs://{gcs_bucket_name}/{output_recipe_filename}"
+        print(f"Successfully uploaded standardized recipe to {standardized_recipe_gcs_uri}") # Keep print
 
-def re_write_recipe(
-    recipe_input: str,
-    input_type: Literal["txt", "youtube"],
-    system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
-    location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.8
-) -> str:
-    """
-    Rewrites a recipe from text or a YouTube video URI into a standardized format.
+    except Exception as e:
+         # Use raise instead of print/sys.exit; includes GCS errors
+        raise RuntimeError(f"Failed to upload standardized recipe to GCS bucket '{gcs_bucket_name}': {e}") from e
+    # --- End Upload Standardized Recipe Text to GCS ---
+
+
+    # --- AI Processing: Graph Generation & Improvement ---
+    first_pass_graph_code = None
+    improved_graph_code = None
+    try:
+        print("Generating initial graph code...") # Keep print
+        first_pass_graph_code = generate_graph(
+            standardised_recipe=standardised_recipe,
+            system_instruction=GENERATE_GRAPH_SYS_PROMPT,
+            project_id=project_id,  # Use function argument
+            location=DEFAULT_VERTEX_LOCATION,
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.2  # Add temperature
+        )
+        print("Initial graph code generated.") # Keep print
+
+        # Validate that first pass code was generated before improving
+        if not first_pass_graph_code:
+             raise RuntimeError("Initial graph code generation returned empty result.")
+
+        print("Improving graph code...") # Keep print
+        improved_graph_code = improve_graph(
+                standardised_recipe=standardised_recipe,
+                graph_code=first_pass_graph_code,
+                system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
+                project_id=project_id,  # Use function argument
+                location=DEFAULT_VERTEX_LOCATION,
+                model_name=DEFAULT_MODEL_NAME,
+                temperature=0.2  # Add temperature
+        )
+        print("Graph code improvement finished.") # Keep print
+
+        # Validate that improved code was generated
+        if not improved_graph_code:
+             raise RuntimeError("Graph code improvement returned empty result.")
+
+    except Exception as e:
+        # Catch errors during graph generation AI calls
+        raise RuntimeError(f"AI processing failed during graph generation/improvement: {e}") from e
+    # --- End AI Processing: Graph ---
+
+
+    # --- Execute Graph Code, Upload PDF, and Cleanup ---
+    # Define dynamically generated filenames
+    final_graph_base_name = f"{recipe_name}_final_{today_str}"
+    final_pdf_filename = f"{final_graph_base_name}.pdf"
+    final_script_name = f"{recipe_name}_final_graph_script_{today_str}.py"
+    final_dot_filename = f"{final_graph_base_name}.gv" # Define .gv filename for cleanup
+    final_pdf_gcs_uri = None
+
+    # Paths for local files
+    final_script_path = Path(final_script_name)
+    final_pdf_path = Path(final_pdf_filename)
+    final_dot_path = Path(final_dot_filename)
+
+    try:
+        # Replace default filename ('recipe_flow') in the improved code
+        # Ensure the replacement uses the final base name
+        improved_graph_code_final = improved_graph_code.replace("'recipe_flow'", f"'{final_graph_base_name}'")
+        improved_graph_code_final = improved_graph_code_final.replace('"recipe_flow"', f'"{final_graph_base_name}"') # Handle double quotes too
+
+        # Write the final python script locally
+        create_python_file_from_string(improved_graph_code_final, filename=str(final_script_path))
+        print(f"Executing final graph script: {final_script_path}") # Keep print
+
+        # Execute the script to generate the PDF and .gv file
+        # TODO: Add better error checking for os.system if possible (e.g., check return code)
+        # For now, we rely on the PDF existence check below.
+        exit_code = os.system(f"python {final_script_path}")
+        if exit_code != 0:
+             raise RuntimeError(f"Final graph script '{final_script_path}' execution failed with exit code {exit_code}.")
+        print(f"Final graph script execution finished (check '{final_pdf_path}').") # Keep print
+
+        # --- Upload final PDF to GCS ---
+        pdf_content_bytes = None # Initialize variable
+        if final_pdf_path.is_file():
+            # Read the PDF content *before* uploading
+            try:
+                pdf_content_bytes = final_pdf_path.read_bytes()
+                print(f"Successfully read {len(pdf_content_bytes)} bytes from {final_pdf_path}") # Keep print
+            except IOError as e:
+                raise RuntimeError(f"Failed to read generated PDF file '{final_pdf_path}': {e}") from e
+
+            print(f"Uploading final PDF to GCS: gs://{gcs_bucket_name}/{final_pdf_filename}") # Keep print
+            # Use the existing aux_fun for uploading files
+            upload_to_gcs(gcs_bucket_name, str(final_pdf_path), final_pdf_filename)
+            final_pdf_gcs_uri = f"gs://{gcs_bucket_name}/{final_pdf_filename}"
+            print(f"Successfully uploaded final PDF to {final_pdf_gcs_uri}") # Keep print
+        else:
+            # Raise an error if PDF wasn't created by the script
+            raise RuntimeError(f"Final PDF file '{final_pdf_path}' was not generated by the script.")
+
+    except (IOError, OSError, RuntimeError, Exception) as e:
+        # Catch errors during script writing, execution, or GCS upload
+        raise RuntimeError(f"Failed during final graph script execution or PDF upload: {e}") from e
+
+    finally:
+        # --- Cleanup Local Files ---
+        # Ensure cleanup happens even if errors occurred above
+        files_to_remove = [final_script_path, final_pdf_path, final_dot_path]
+        for file_path in files_to_remove:
+            try:
+                if file_path.exists():
+                    file_path.unlink()
+                    print(f"Cleaned up local file: {file_path}") # Keep print for server logs
+            except OSError as e:
+                 # Log cleanup warnings but don't raise fatal errors
+                print(f"Warning: Could not remove local file {file_path}: {e}")
+        # --- End Cleanup ---
+
+    # --- Return GCS URIs ---
+    # Ensure both URIs are set before returning
+    if not standardized_recipe_gcs_uri or not final_pdf_gcs_uri:
+         # This indicates an issue potentially missed by earlier checks
+         raise RuntimeError("Processing completed, but failed to obtain GCS URIs for recipe or graph.")
+
+    # Ensure pdf_content_bytes is not None if PDF was supposed to be generated
+    if final_pdf_gcs_uri and pdf_content_bytes is None:
+         # This case should ideally be caught earlier, but serves as a final check
+         raise RuntimeError("PDF was uploaded to GCS, but its content could not be read locally.")
+
+
+    return {
+        "recipe_uri": standardized_recipe_gcs_uri,
+        "graph_uri": final_pdf_gcs_uri,
+        "pdf_content": pdf_content_bytes # Add the PDF content bytes
+    }
+# --- End text_to_graph ---
+
+
+# --- New Function: revise_recipe ---
+def revise_recipe(original_draft: str, current_standardised_recipe: str, user_feedback: str, project_id: str) -> str:
+    '''
+    Revises a standardized recipe based on user feedback using an AI model.
 
     Args:
-        recipe_input: The recipe text or the accessible video URI (e.g., GCS).
-        input_type: The type of input provided: "txt" or "youtube".
-        system_instruction: The system prompt guiding the AI's behavior.
-        project_id: Google Cloud project ID for Vertex AI. Defaults to env variable.
-        location: Google Cloud location for Vertex AI endpoint.
-        model_name: The specific GenAI model to use.
+        original_draft: The initial recipe draft (for context).
+        current_standardised_recipe: The recipe version the user reviewed.
+        user_feedback: The changes requested by the user.
+        project_id: Google Cloud Project ID.
 
     Returns:
-        The rewritten, standardized recipe text.
+        The revised standardized recipe text.
 
     Raises:
-        ValueError: If project_id is not provided or input_type is invalid.
-        RuntimeError: If the API call fails or returns an empty response.
-    """
-    logger.info(f"Running the re-writing agent for input type: {input_type}...")
-    client = _get_genai_client(project_id, location)
+        RuntimeError: If AI revision fails.
+    '''
+    print("Revising recipe based on user feedback...") # Keep print for server logs
 
-    parts: List[types.Part] = []
-    if input_type == "txt":
-        parts.append(types.Part.from_text(text=recipe_input))
-    elif input_type == "youtube":
-        logger.info(f"Processing video URI: {recipe_input}")
-        try:
-            video_part = types.Part.from_uri(
-                file_uri=recipe_input,
-                mime_type="video/*",
-            )
-            text_part = types.Part.from_text(
-                text="Generate a standardized recipe from the following video:"
-            )
-            parts = [text_part, video_part]
-        except Exception as e:
-            logger.exception(f"Failed to create Part from URI '{recipe_input}': {e}")
-            raise ValueError(f"Could not process video URI '{recipe_input}'. Ensure it's accessible (e.g., a GCS URI).") from e
-    else:
-        logger.error(f"Invalid input_type provided: '{input_type}'")
-        raise ValueError(f"Invalid input_type: '{input_type}'. Must be 'txt' or 'youtube'.")
+    # Construct input text for the AI model
+    # Consider if original_draft is needed contextually. If prompts handle revision well without it, it can be omitted.
+    # Let's include it for now for better context.
+    input_text = f"""
+User Feedback:
+---
+{user_feedback}
+---
 
-    contents = [types.Content(role="user", parts=parts)]
-    config = _build_generate_content_config(
-        system_instruction_text=system_instruction,
-        temperature=temperature
-    )
+Current Standardized Recipe:
+---
+{current_standardised_recipe}
+---
 
-    response_text = _call_generate_content(client, model_name, contents, config)
+Original Recipe Draft (for context):
+---
+{original_draft}
+---
 
-    logger.info("Finished the re-writing agent.")
-    return response_text
+Based *only* on the User Feedback provided above, please revise the Current Standardized Recipe. Maintain the exact same structure and formatting rules as the Current Standardized Recipe. Output *only* the full, revised standardized recipe text.
+"""
 
-def generate_graph(
-    standardised_recipe: str,
-    system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
-    location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.2
-) -> str:
-    """
-    Generates initial Graphviz Python code from a standardized recipe.
+    try:
+        # Assuming DEFAULT_VERTEX_LOCATION and DEFAULT_MODEL_NAME are accessible
+        # If not, ensure they are imported or passed correctly.
+        # Check if these constants exist in the scope of main.py, if not import from aux_vars
+        revised_text = re_write_recipe(
+            recipe_input=input_text,
+            input_type="txt",
+            system_instruction=REVISE_RECIPE_SYS_PROMPT, # Use the new prompt
+            project_id=project_id,
+            location=DEFAULT_VERTEX_LOCATION,
+            model_name=DEFAULT_MODEL_NAME,
+            temperature=0.8  # Add temperature
+        )
+        if not revised_text:
+            raise RuntimeError("AI revision returned an empty result.")
 
-    Args:
-        standardized_recipe: The recipe text in a standardized format.
-        system_instruction: The system prompt guiding the AI's behavior.
-        project_id: Google Cloud project ID for Vertex AI. Defaults to env variable.
-        location: Google Cloud location for Vertex AI endpoint.
-        model_name: The specific GenAI model to use.
+        print("Recipe revision finished.") # Keep print for server logs
+        return revised_text
 
-    Returns:
-        The generated Python code string for Graphviz.
+    except Exception as e:
+        print(f"Error during recipe revision: {e}") # Keep print for server logs
+        # Re-raise the exception to be caught by the Streamlit app
+        raise RuntimeError(f"AI processing failed during recipe revision: {e}") from e
+# --- End revise_recipe ---
 
-    Raises:
-        ValueError: If project_id is not provided.
-        RuntimeError: If the API call fails or returns an empty response.
-    """
-    logger.info("Running the graph generation agent...")
-    client = _get_genai_client(project_id, location)
 
-    text_part = types.Part.from_text(text=standardised_recipe)
-    contents = [types.Content(role="user", parts=[text_part])]
-    tools = [types.Tool(google_search=types.GoogleSearch())]
-    config = _build_generate_content_config(
-        system_instruction_text=system_instruction,
-        tools=tools,
-        temperature=temperature
-    )
-
-    response_text = _call_generate_content(client, model_name, contents, config)
-
-    logger.info("Finished the graph generation agent.")
-    return response_text
-
-def improve_graph(
-    standardised_recipe: str,
-    graph_code: str,
-    system_instruction: str,
-    project_id: Optional[str] = DEFAULT_VERTEX_PROJECT_ID,
-    location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
-    temperature: Optional[float] = 0.2
-) -> str:
-    """
-    Improves existing Graphviz Python code based on the recipe and instructions.
-
-    Args:
-        standardised_recipe: The recipe text for context.
-        graph_code: The initial Python Graphviz code to be improved.
-        system_instruction: The system prompt guiding the AI's behavior.
-        project_id: Google Cloud project ID for Vertex AI. Defaults to env variable.
-        location: Google Cloud location for Vertex AI endpoint.
-        model_name: The specific GenAI model to use.
-
-    Returns:
-        The improved Python code string for Graphviz.
-
-    Raises:
-        ValueError: If project_id is not provided.
-        RuntimeError: If the API call fails or returns an empty response.
-    """
-    logger.info("Running the graph improvement agent...")
-    client = _get_genai_client(project_id, location)
-
-    recipe_part = types.Part.from_text(
-        text=f"## Standardized Recipe Context:\n\n{standardised_recipe}\n\n"
-    )
-    graph_code_part = types.Part.from_text(
-        text=f"## Current Graphviz Python Code to Improve:\n\n```python\n{graph_code}\n```\n\n"
-        + "Improve the above Python code based on the recipe context and the system instructions."
-    )
-    contents = [types.Content(role="user", parts=[recipe_part, graph_code_part])]
-    tools = [types.Tool(google_search=types.GoogleSearch())]
-    config = _build_generate_content_config(
-        system_instruction_text=system_instruction,
-        tools=tools,
-        temperature=temperature
-    )
-
-    response_text = _call_generate_content(client, model_name, contents, config)
-
-    logger.info("Finished the graph improvement agent.")
-    return response_text
+# --- Removed Command Line Interface ---
