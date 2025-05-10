@@ -8,7 +8,9 @@ from google.genai import types
 PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
 #DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25" 
-DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
+#DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06" # To be removed
+PROCESS_TEXT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
+TEXT_TO_GRAPH_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
 DEFAULT_TOP_P = 1.0
 DEFAULT_MAX_TOKENS = 33333
 
@@ -146,7 +148,7 @@ def draft_to_recipe(
     system_instruction: str,
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
+    model_name: str = PROCESS_TEXT_MODEL_NAME,
     temperature: float = RECIPE_DRAFT_TEMP, # Use specific constant
     max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
@@ -191,7 +193,7 @@ def re_write_recipe(
     system_instruction: str,
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
+    model_name: str = PROCESS_TEXT_MODEL_NAME,
     temperature: float = RECIPE_REWRITE_TEMP, # Use specific constant
     max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
@@ -254,7 +256,7 @@ def generate_graph(
     system_instruction: str,
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
+    model_name: str = TEXT_TO_GRAPH_MODEL_NAME,
     temperature: float = GRAPH_GEN_TEMP, # Use specific constant
     max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
@@ -299,7 +301,7 @@ def improve_graph(
     system_instruction: str,
     project_id: Optional[str] = PROJECT_ID,
     location: str = DEFAULT_VERTEX_LOCATION,
-    model_name: str = DEFAULT_MODEL_NAME,
+    model_name: str = TEXT_TO_GRAPH_MODEL_NAME,
     temperature: float = GRAPH_IMPROVE_TEMP, # Use specific constant
     max_output_tokens: int = DEFAULT_MAX_TOKENS
 ) -> str:
