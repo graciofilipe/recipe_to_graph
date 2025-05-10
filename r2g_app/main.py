@@ -3,7 +3,8 @@ import os
 from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 # Import constants from genai_funs
 from .genai_funs import (
-    PROJECT_ID, DEFAULT_VERTEX_LOCATION, DEFAULT_MODEL_NAME,
+    PROJECT_ID, DEFAULT_VERTEX_LOCATION,
+    PROCESS_TEXT_MODEL_NAME, TEXT_TO_GRAPH_MODEL_NAME,
     RECIPE_DRAFT_TEMP, RECIPE_REWRITE_TEMP, RECIPE_REVISE_TEMP,
     GRAPH_GEN_TEMP, GRAPH_IMPROVE_TEMP
 )
@@ -61,7 +62,7 @@ def process_text(recipe_draft_text: str, project_id: str) -> str:
             system_instruction=DRAFT_TO_RECIPE_SYS_PROMPT,
             project_id=project_id,  # Pass explicitly
             location=DEFAULT_VERTEX_LOCATION, # Use imported constant
-            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            model_name=PROCESS_TEXT_MODEL_NAME, # Use imported constant
             temperature=RECIPE_DRAFT_TEMP # Use imported constant
         )
 
@@ -73,7 +74,7 @@ def process_text(recipe_draft_text: str, project_id: str) -> str:
             system_instruction=RE_WRITE_SYS_PROMPT,
             project_id=project_id,  # Pass explicitly
             location=DEFAULT_VERTEX_LOCATION, # Use imported constant
-            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            model_name=PROCESS_TEXT_MODEL_NAME, # Use imported constant
             temperature=RECIPE_REWRITE_TEMP # Use imported constant
         )
 
@@ -173,7 +174,7 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
             system_instruction=GENERATE_GRAPH_SYS_PROMPT,
             project_id=project_id,  # Pass explicitly
             location=DEFAULT_VERTEX_LOCATION, # Use imported constant
-            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            model_name=TEXT_TO_GRAPH_MODEL_NAME, # Use imported constant
             temperature=GRAPH_GEN_TEMP # Use imported constant
         )
         print("Initial graph code generated.") # Keep print
@@ -190,7 +191,7 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
                 system_instruction=IMPROVE_GRAPH_SYS_PROMPT,
                 project_id=project_id,  # Pass explicitly
                 location=DEFAULT_VERTEX_LOCATION, # Use imported constant
-                model_name=DEFAULT_MODEL_NAME, # Use imported constant
+                model_name=TEXT_TO_GRAPH_MODEL_NAME, # Use imported constant
                 temperature=GRAPH_IMPROVE_TEMP # Use imported constant
         )
         print("Graph code improvement finished.") # Keep print
@@ -344,7 +345,7 @@ Based *only* on the User Feedback provided above, please revise the Current Stan
             system_instruction=REVISE_RECIPE_SYS_PROMPT, # Use the new prompt
             project_id=project_id, # Pass explicitly
             location=DEFAULT_VERTEX_LOCATION, # Use imported constant
-            model_name=DEFAULT_MODEL_NAME, # Use imported constant
+            model_name=PROCESS_TEXT_MODEL_NAME, # Use imported constant
             temperature=RECIPE_REVISE_TEMP # Use imported constant
         )
         if not revised_text:
