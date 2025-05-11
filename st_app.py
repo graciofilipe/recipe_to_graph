@@ -225,7 +225,61 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
 
     if html_content and css_content and js_content:
         try:
+            # --- Extract graphData from js_content ---
+            graph_data_py = None
+            if js_content:
+                import re
+                import json
+                # Regex to find "const graphData = {" up to its corresponding "};"
+                # This regex handles nested braces to some extent but assumes balanced braces for graphData
+                match = re.search(r"const\s+graphData\s*=\s*(\{[\s\S]*?\n\}\s*;)", js_content, re.DOTALL)
+                if match:
+                    graph_data_str = match.group(1)
+                    # Remove the trailing semicolon and any whitespace before it
+                    graph_data_str = graph_data_str.strip().rstrip(';')
+                    # print("--- Extracted graphData String ---")
+                    # print(graph_data_str)
+                    # print("---------------------------------")
+                    try:
+                        # Attempt to parse. This might fail if keys are not quoted.
+                        # For robust parsing, keys would need to be quoted.
+                        # Example: re.sub(r'([{,]\s*)(\w+)(\s*:)', r'\1"\2"\3', graph_data_str)
+                        graph_data_py = json.loads(graph_data_str)
+                        # print("--- Parsed graphData (Python Dict) ---")
+                        # print(graph_data_py)
+                        # print("---------------------------------------")
+                    except json.JSONDecodeError as e:
+                        # Consider converting to logging if this error is important for production
+                        # print(f"Error parsing graphData string with json.loads: {e}")
+                        # print("Problematic string:", graph_data_str)
+                        pass # Silently pass for now, or use proper logging
+                else:
+                    # print("graphData object not found in js_content.")
+                    pass # Silently pass
+            # --- End graphData Extraction ---
+
+            # --- Generate HTML for Graph Nodes ---
+            nodes_html_parts = []
+            graph_nodes_html = "<p>No graph data found or no nodes in data.</p>" # Default message
+            if graph_data_py and 'nodes' in graph_data_py and isinstance(graph_data_py['nodes'], list):
+                if graph_data_py['nodes']: # Check if there are any nodes
+                    for node_data in graph_data_py['nodes']:
+                        node_id = node_data.get('id', 'Unknown ID')
+                        description = node_data.get('description', 'No description available.')
+                        # Escape HTML characters in description and id to prevent XSS or broken HTML
+                        import html
+                        node_id_safe = html.escape(str(node_id))
+                        description_safe = html.escape(description)
+                        nodes_html_parts.append(
+                            f'<div class="node" data-description="{description_safe}">{node_id_safe}</div>'
+                        )
+                    graph_nodes_html = "".join(nodes_html_parts)
+                else:
+                    graph_nodes_html = "<p>Graph data contains an empty list of nodes.</p>"
+            # --- End Node HTML Generation ---
+
             # Embed CSS and JavaScript into the HTML
+            # sample_node_html = "<div class='node' style='background-color:yellow; padding:10px; color:black;'>Python-Generated Node</div>" # Removed
             full_html = f"""
             <!DOCTYPE html>
             <html>
@@ -237,15 +291,62 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
                 </style>
             </head>
             <body>
-                {html_content}
+                <div class="container">
+                    <h1>Recipe Flowchart</h1>
+                    <div id="graphDiv" class="graph-placeholder">
+                        {graph_nodes_html}
+                    </div>
+                    <div id="tooltip" class="tooltip" style="opacity:0;"></div>
+                </div>
                 <script>
-                    {js_content}
+                    document.addEventListener('DOMContentLoaded', function() {{
+                        const tooltipDiv = document.getElementById('tooltip');
+                        const nodes = document.querySelectorAll('.node');
+
+                        if (!tooltipDiv) {{
+                            console.error('Tooltip div not found!');
+                            return;
+                        }}
+                        if (nodes.length === 0) {{
+                            console.log('No nodes found for tooltips.');
+                            // Display message in graphDiv if no nodes rendered by Python
+                            const graphDiv = document.getElementById('graphDiv');
+                            if(graphDiv && graphDiv.innerHTML.trim() === "" || graphDiv.innerHTML.includes("No graph data found")) {{
+                                // graphDiv.textContent = 'No graph nodes were rendered by Python or data was invalid.';
+                                // The Python-generated message is already in graph_nodes_html, so no need to overwrite here unless it's empty
+                            }}
+                            return;
+                        }}
+
+                        nodes.forEach(node => {{
+                            node.onmouseover = function(event) {{
+                                const description = this.getAttribute('data-description');
+                                tooltipDiv.innerHTML = description;
+                                tooltipDiv.style.opacity = 1;
+                                // Position tooltip - adjust as needed
+                                tooltipDiv.style.left = (event.pageX + 10) + 'px';
+                                tooltipDiv.style.top = (event.pageY + 10) + 'px';
+                            }};
+                            node.onmouseout = function() {{
+                                tooltipDiv.style.opacity = 0;
+                            }};
+                            node.onmousemove = function(event) {{ // Keep tooltip moving with mouse
+                                tooltipDiv.style.left = (event.pageX + 10) + 'px';
+                                tooltipDiv.style.top = (event.pageY + 10) + 'px';
+                            }};
+                        }});
+                        console.log(`Tooltip JS initialized for ${{nodes.length}} nodes.`);
+                    }});
                 </script>
             </body>
             </html>
             """
             st.subheader("Generated Recipe Graph:")
-            st.components.v1.html(full_html, height=1200, scrolling=True)
+            # print(full_html) # Removed debugging print
+            # st.components.v1.html(full_html, height=1200, scrolling=True) # Temporarily commented out
+            simple_test_html = "<h1>Hello Streamlit</h1><p>This is a test.</p>"
+            st.components.v1.html(simple_test_html, height=100, scrolling=True)
+
 
         except Exception as e:
             st.error(f"An error occurred while preparing the HTML graph for display: {e}")
