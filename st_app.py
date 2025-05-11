@@ -245,6 +245,8 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             </html>
             """
             st.subheader("Generated Recipe Graph:")
+            print(full_html) # Added for debugging
+            # Restore the original component call and remove the simple_test_html
             st.components.v1.html(full_html, height=1200, scrolling=True)
 
         except Exception as e:
