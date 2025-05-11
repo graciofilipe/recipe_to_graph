@@ -856,6 +856,7 @@ Your output *must* be structured as follows, providing the complete content for 
 *   **Modification Focus:**
     *   Primarily refactor `style.css`.
     *   Modify `script.js` for layout adjustments, advanced dynamic styling logic (e.g., adding/modifying classes based on data, using mapper functions in the Cytoscape style property), or refining how `elements` data is used for styling.
+    *   **Crucially, ensure the `script.js` output includes the graph data (the `elements` array for Cytoscape.js). This data, originally provided in the input `script.js` from Agent-2, must be preserved or correctly regenerated. It should be correctly defined as a JavaScript variable (e.g., `const graphData = [...]`) or directly within the `cytoscape({ elements: [...] })` initialization, and be available for the Cytoscape instance. This data is essential for rendering the graph and must be within the ```javascript filename="script.js" ... ``` block.**
     *   `index.html` should generally remain unchanged unless minor adjustments are essential for styling (e.g., adding a class to a container, linking a new web font).
 
 **Visual Enhancement Tasks & Style Guide (for `style.css` and `script.js`):**
