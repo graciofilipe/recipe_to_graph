@@ -221,6 +221,8 @@ Verify HTML, CSS, and JavaScript syntactic correctness.
 
 Your output *must* be structured as follows:
 
+**Critical for parsing:** Each code block *must* start with the language, followed by `filename="your_filename.ext"`, all within the triple backticks. For example: ` ```html filename="index.html" `.
+
 ```html filename="index.html"
 <!-- Content for index.html -->
 ```
@@ -832,6 +834,8 @@ The target audience are chefs following recipes, so visual clarity, intuitive de
 **Output File Structure:**
 
 Your output *must* be structured as follows, providing the complete content for each file, even if a file is unchanged:
+
+**Critical for parsing:** Each code block *must* start with the language, followed by `filename="your_filename.ext"`, all within the triple backticks. For example: ` ```html filename="index.html" `. Ensure this format is strictly followed for all three files.
 
 ```html filename="index.html"
 <!-- Content for index.html (usually unchanged from Agent-2, but include if modified) -->

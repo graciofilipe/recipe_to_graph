@@ -222,64 +222,79 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
     html_content = results.get("html_content")
     css_content = results.get("css_content")
     js_content = results.get("js_content")
+    # print(f"DEBUG: js_content: {js_content}")
 
-    if html_content and css_content and js_content:
+    # Initialize graph_nodes_html with a generic fallback message
+    graph_nodes_html = "<p>An unexpected issue occurred while preparing graph data.</p>"
+
+    if not html_content or not css_content: # Basic check for HTML/CSS
+        st.warning("HTML or CSS content not found in results. Cannot display graph fully.")
+        # graph_nodes_html might still be useful if js_content is processed,
+        # but the overall display will be broken. For now, we let it proceed.
+        # If js_content is also missing, the message below will take precedence.
+
+    if not js_content:
+        graph_nodes_html = "<p>JavaScript content for the graph was not found in the AI's response. Unable to render graph.</p>"
+    else:
         try:
-            # --- Extract graphData from js_content ---
-            graph_data_py = None
-            if js_content:
-                import re
-                import json
-                # Regex to find "const graphData = {" up to its corresponding "};"
-                # This regex handles nested braces to some extent but assumes balanced braces for graphData
-                match = re.search(r"const\s+graphData\s*=\s*(\{[\s\S]*?\n\}\s*;)", js_content, re.DOTALL)
-                if match:
-                    graph_data_str = match.group(1)
-                    # Remove the trailing semicolon and any whitespace before it
-                    graph_data_str = graph_data_str.strip().rstrip(';')
-                    # print("--- Extracted graphData String ---")
-                    # print(graph_data_str)
-                    # print("---------------------------------")
-                    try:
-                        # Attempt to parse. This might fail if keys are not quoted.
-                        # For robust parsing, keys would need to be quoted.
-                        # Example: re.sub(r'([{,]\s*)(\w+)(\s*:)', r'\1"\2"\3', graph_data_str)
-                        graph_data_py = json.loads(graph_data_str)
-                        # print("--- Parsed graphData (Python Dict) ---")
-                        # print(graph_data_py)
-                        # print("---------------------------------------")
-                    except json.JSONDecodeError as e:
-                        # Consider converting to logging if this error is important for production
-                        # print(f"Error parsing graphData string with json.loads: {e}")
-                        # print("Problematic string:", graph_data_str)
-                        pass # Silently pass for now, or use proper logging
-                else:
-                    # print("graphData object not found in js_content.")
-                    pass # Silently pass
-            # --- End graphData Extraction ---
+            graph_data_py = None # Initialize to None
+            import re
+            import json
+            # Regex to find "const graphData = {" up to its corresponding "};"
+            match = re.search(r"const\s+graphData\s*=\s*(\{[\s\S]*?\n\}\s*;)", js_content, re.DOTALL)
 
-            # --- Generate HTML for Graph Nodes ---
-            nodes_html_parts = []
-            graph_nodes_html = "<p>No graph data found or no nodes in data.</p>" # Default message
-            if graph_data_py and 'nodes' in graph_data_py and isinstance(graph_data_py['nodes'], list):
-                if graph_data_py['nodes']: # Check if there are any nodes
-                    for node_data in graph_data_py['nodes']:
-                        node_id = node_data.get('id', 'Unknown ID')
-                        description = node_data.get('description', 'No description available.')
-                        # Escape HTML characters in description and id to prevent XSS or broken HTML
-                        import html
-                        node_id_safe = html.escape(str(node_id))
-                        description_safe = html.escape(description)
-                        nodes_html_parts.append(
-                            f'<div class="node" data-description="{description_safe}">{node_id_safe}</div>'
-                        )
-                    graph_nodes_html = "".join(nodes_html_parts)
-                else:
-                    graph_nodes_html = "<p>Graph data contains an empty list of nodes.</p>"
-            # --- End Node HTML Generation ---
+            if match:
+                graph_data_str = match.group(1).strip().rstrip(';')
+                # print(f"DEBUG: graph_data_str: {graph_data_str}")
+                try:
+                    graph_data_py = json.loads(graph_data_str)
+                    # print(f"DEBUG: Parsed graphData (Python Dict): {graph_data_py}")
+                except json.JSONDecodeError as e:
+                    # print(f"DEBUG: Error parsing graphData string with json.loads: {e}")
+                    # print(f"DEBUG: Problematic graph_data_str for JSON parsing: {graph_data_str}")
+                    graph_nodes_html = "<p>The graph data object found in the JavaScript was improperly formatted (not valid JSON). Unable to render graph.</p>"
+            else:
+                # print("DEBUG: graphData object not found in js_content.")
+                graph_nodes_html = "<p>Could not find the graph data object (graphData) within the JavaScript from the AI. Unable to render graph.</p>"
 
+            if graph_data_py: # Proceed only if graph_data_py was successfully populated
+                if 'nodes' in graph_data_py and isinstance(graph_data_py['nodes'], list):
+                    if graph_data_py['nodes']:
+                        nodes_html_parts = []
+                        for node_data in graph_data_py['nodes']:
+                            node_id = node_data.get('id', 'Unknown ID')
+                            description = node_data.get('description', 'No description available.')
+                            import html
+                            node_id_safe = html.escape(str(node_id))
+                            description_safe = html.escape(description)
+                            nodes_html_parts.append(
+                                f'<div class="node" data-description="{description_safe}">{node_id_safe}</div>'
+                            )
+                        graph_nodes_html = "".join(nodes_html_parts)
+                    else:
+                        graph_nodes_html = "<p>Graph data contains an empty list of nodes.</p>"
+                else:
+                    graph_nodes_html = "<p>The parsed graph data is missing the expected 'nodes' list or it is not a list. Unable to render graph.</p>"
+            # If graph_data_py is None AND no specific error message was set in the try-except for json.loads or match-else block,
+            # the graph_nodes_html will retain the message set in those blocks, or the generic one if those were skipped due to js_content being None.
+            # This elif condition ensures that if graph_data_py is None (e.g. match was None, or json.loads failed but didn't set graph_nodes_html - which it does now)
+            # AND graph_nodes_html hasn't been updated by a more specific error, then we set a fallback.
+            # Given the current logic, this specific fallback might be less likely to be hit if js_content existed.
+            elif graph_nodes_html == "<p>An unexpected issue occurred while preparing graph data.</p>": # Check if it's still the initial generic fallback
+                 graph_nodes_html = "<p>No graph data found or no nodes in data.</p>"
+
+        except Exception as e:
+            # This outer exception might catch other issues during js_content processing
+            st.error(f"An error occurred while processing JavaScript for the graph: {e}")
+            graph_nodes_html = f"<p>An unexpected error occurred during graph data preparation: {e}</p>"
+
+
+    # --- Display HTML/CSS/JS Graph ---
+    # This 'if' now primarily checks if we have the necessary components to attempt rendering.
+    # The graph_nodes_html will display specific error messages if js_content processing failed.
+    if html_content and css_content: # js_content presence is handled by graph_nodes_html logic
+        try:
             # Embed CSS and JavaScript into the HTML
-            # sample_node_html = "<div class='node' style='background-color:yellow; padding:10px; color:black;'>Python-Generated Node</div>" # Removed
             full_html = f"""
             <!DOCTYPE html>
             <html>
@@ -342,16 +357,39 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             </html>
             """
             st.subheader("Generated Recipe Graph:")
-            # print(full_html) # Removed debugging print
-            st.components.v1.html(full_html, height=1200, scrolling=True) # Temporarily commented out
-
+            # print(full_html) # For debugging the full HTML structure if needed
+            st.components.v1.html(full_html, height=1200, scrolling=True)
 
         except Exception as e:
-            st.error(f"An error occurred while preparing the HTML graph for display: {e}")
-    else:
-        st.warning("HTML, CSS, or JavaScript content not found in results. Cannot display graph.")
+            # This error is for issues during the final HTML assembly or display by Streamlit
+            st.error(f"An error occurred while assembling or displaying the HTML graph: {e}")
+            # Display the graph_nodes_html error message if assembly fails
+            st.markdown(graph_nodes_html, unsafe_allow_html=True)
+    elif html_content and not css_content:
+        st.warning("CSS content is missing. Graph display may be affected.")
+        # Attempt to display with placeholder for graphDiv if js was processed
+        # This case is less critical if graph_nodes_html already indicates JS issues.
+        placeholder_html = f"""
+        <!DOCTYPE html><html><head><meta charset="utf-8"><title>Recipe Graph (CSS Missing)</title></head>
+        <body><div class="container"><h1>Recipe Flowchart (CSS Missing)</h1>
+        <div id="graphDiv" class="graph-placeholder">{graph_nodes_html}</div>
+        </div></body></html>"""
+        st.components.v1.html(placeholder_html, height=600, scrolling=True)
+    else: # Handles cases where html_content is missing, or other unhandled scenarios.
+          # The graph_nodes_html should provide specific errors if JS was the primary issue.
+        if not html_content:
+            st.warning("HTML content not found in results. Cannot display graph.")
+        # If graph_nodes_html has a specific error, display it.
+        # Otherwise, show a generic warning if it's still the initial fallback.
+        if graph_nodes_html == "<p>An unexpected issue occurred while preparing graph data.</p>":
+            st.warning("HTML, CSS, or JavaScript content not found or processed correctly. Cannot display graph.")
+        else:
+            # Display the specific error from graph_nodes_html processing
+            st.markdown(graph_nodes_html, unsafe_allow_html=True)
+
 
     # --- Download Buttons ---
+    # These should still be offered if the content exists, even if display failed for some reason.
     if html_content:
         st.download_button(
             label="Download HTML",
