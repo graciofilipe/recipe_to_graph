@@ -343,9 +343,7 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             """
             st.subheader("Generated Recipe Graph:")
             # print(full_html) # Removed debugging print
-            # st.components.v1.html(full_html, height=1200, scrolling=True) # Temporarily commented out
-            simple_test_html = "<h1>Hello Streamlit</h1><p>This is a test.</p>"
-            st.components.v1.html(simple_test_html, height=100, scrolling=True)
+            st.components.v1.html(full_html, height=1200, scrolling=True) # Temporarily commented out
 
 
         except Exception as e:
