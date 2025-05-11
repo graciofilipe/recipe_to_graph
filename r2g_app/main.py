@@ -148,8 +148,11 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         # Re-raise exceptions from _get_gcs_bucket
         raise e
 
+    # Construct the GCS destination directory path early
+    gcs_destination_directory = f"{recipe_name}/{today_str}"
+
     # --- Upload Standardized Recipe Text to GCS (Moved to the beginning) ---
-    output_recipe_filename = f"{recipe_name}_{today_str}.txt"
+    output_recipe_filename = f"{gcs_destination_directory}/standardised_recipe.txt" # Changed path
     standardized_recipe_gcs_uri = None
     try:
         print(f"Uploading standardized recipe to GCS: gs://{gcs_bucket_name}/{output_recipe_filename}") # Keep print
@@ -184,19 +187,6 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         # Validate that first pass code was generated before improving
         if not first_pass_graph_code:
              raise RuntimeError("Initial graph code generation returned empty result.")
-
-        # --- Upload first_pass_graph_code to GCS ---
-        unprocessed_graph_filename = f"unprocessed_{recipe_name}_{today_str}.txt"
-        unprocessed_graph_gcs_uri = None
-        try:
-            print(f"Uploading unprocessed graph code to GCS: gs://{gcs_bucket_name}/{unprocessed_graph_filename}")
-            unprocessed_blob = bucket.blob(unprocessed_graph_filename)
-            unprocessed_blob.upload_from_string(first_pass_graph_code, content_type='text/plain; charset=utf-8')
-            unprocessed_graph_gcs_uri = f"gs://{gcs_bucket_name}/{unprocessed_graph_filename}"
-            print(f"Successfully uploaded unprocessed graph code to {unprocessed_graph_gcs_uri}")
-        except Exception as e:
-            print(f"Warning: Failed to upload unprocessed graph code to GCS: {e}")
-        # --- End Upload first_pass_graph_code to GCS ---
 
         print("Improving graph code...") # Keep print
         # Use imported constants
@@ -233,10 +223,10 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         raise RuntimeError("HTML content could not be parsed from improved_graph_code.")
 
     # --- Define Local Filenames ---
-    base_filename = f"{recipe_name}_{today_str}"
-    html_filename = f"{base_filename}_index.html"
-    css_filename = f"{base_filename}_style.css"
-    js_filename = f"{base_filename}_script.js"
+    # base_filename = f"{recipe_name}_{today_str}" # Not needed for static names
+    html_filename = "index.html"
+    css_filename = "style.css"
+    js_filename = "script.js"
 
     html_file_path = Path(html_filename)
     css_file_path = Path(css_filename)
@@ -253,7 +243,8 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
                 f.write(css_content)
             print(f"Successfully wrote CSS to {css_file_path}")
         else:
-            print(f"No CSS content to write for {css_filename}")
+            # Use static filename in log message
+            print(f"No CSS content to write for style.css")
 
 
         if js_content: # Only write if JS content exists
@@ -261,7 +252,8 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
                 f.write(js_content)
             print(f"Successfully wrote JavaScript to {js_file_path}")
         else:
-            print(f"No JavaScript content to write for {js_filename}")
+            # Use static filename in log message
+            print(f"No JavaScript content to write for script.js")
 
     except IOError as e:
         raise RuntimeError(f"Failed to write graph content to local files: {e}") from e
@@ -271,13 +263,10 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
     css_gcs_uri = None
     js_gcs_uri = None
 
-    # Construct the GCS destination directory path
-    gcs_destination_directory = f"{recipe_name}/{today_str}"
-
     try:
         # Upload HTML file
         if html_file_path.exists():
-            html_destination_blob_name = f"{gcs_destination_directory}/{html_filename}"
+            html_destination_blob_name = f"{gcs_destination_directory}/index.html" # Static filename
             upload_to_gcs(gcs_bucket_name, str(html_file_path), html_destination_blob_name)
             html_gcs_uri = f"gs://{gcs_bucket_name}/{html_destination_blob_name}"
             print(f"Successfully uploaded HTML to {html_gcs_uri}")
@@ -286,25 +275,27 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
 
         # Upload CSS file if it exists
         if css_content and css_file_path.exists():
-            css_destination_blob_name = f"{gcs_destination_directory}/{css_filename}"
+            css_destination_blob_name = f"{gcs_destination_directory}/style.css" # Static filename
             upload_to_gcs(gcs_bucket_name, str(css_file_path), css_destination_blob_name)
             css_gcs_uri = f"gs://{gcs_bucket_name}/{css_destination_blob_name}"
             print(f"Successfully uploaded CSS to {css_gcs_uri}")
         elif css_content:
             print(f"CSS file {css_file_path} not found for upload, though CSS content exists.")
         else:
-            print(f"No CSS content to upload for {css_filename}")
+            # Use static filename in log message
+            print(f"No CSS content to upload for style.css")
 
         # Upload JS file if it exists
         if js_content and js_file_path.exists():
-            js_destination_blob_name = f"{gcs_destination_directory}/{js_filename}"
+            js_destination_blob_name = f"{gcs_destination_directory}/script.js" # Static filename
             upload_to_gcs(gcs_bucket_name, str(js_file_path), js_destination_blob_name)
             js_gcs_uri = f"gs://{gcs_bucket_name}/{js_destination_blob_name}"
             print(f"Successfully uploaded JS to {js_gcs_uri}")
         elif js_content:
             print(f"JS file {js_file_path} not found for upload, though JS content exists.")
         else:
-            print(f"No JavaScript content to upload for {js_filename}")
+            # Use static filename in log message
+            print(f"No JavaScript content to upload for script.js")
 
     except Exception as e:
         # Consider how to handle partial uploads. For now, raise an error.
