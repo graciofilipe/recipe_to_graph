@@ -2,13 +2,14 @@ import logging
 import re # Import regular expressions module
 from pathlib import Path
 from typing import Optional
+import os
 
 # Import the Google Cloud Storage library
 from google.cloud import storage
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-DEFAULT_FILENAME = "create_graph.py"
+#DEFAULT_FILENAME = "create_graph.py"
 
 # def create_python_file_from_string(
 #     code_string: Optional[str],
@@ -127,12 +128,12 @@ def parse_code_string(code_string: str):
     "script.js": js_content,
     }
 
-    import os
 
 def save_files(parsed_content: dict, output_directory: str = "."):
     """
     Saves the parsed code content into files.
     """
+    import os
     os.makedirs(output_directory, exist_ok=True)
     for filename, content in parsed_content.items():
     filepath = os.path.join(output_directory, filename)
