@@ -266,62 +266,89 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
     except IOError as e:
         raise RuntimeError(f"Failed to write graph content to local files: {e}") from e
 
-    # --- TODO: Upload HTML, CSS, JS to GCS (or handle as needed) ---
-    # This will be handled in a subsequent step.
-    # For now, the files are written locally.
+    # --- Upload HTML, CSS, JS to GCS ---
+    html_gcs_uri = None
+    css_gcs_uri = None
+    js_gcs_uri = None
 
-    # --- Cleanup Logic (Marked for Update) ---
-    # Add new files to cleanup list
-    # The old cleanup logic for .py, .pdf, .gv files is no longer directly applicable.
-    # This section needs to be revised based on what files (if any) are
-    # created and need cleanup in the new workflow.
+    # Construct the GCS destination directory path
+    gcs_destination_directory = f"{recipe_name}/{today_str}"
 
-    files_to_remove_later = [html_file_path, css_file_path, js_file_path]
-    # The actual removal will happen in the finally block, which needs to be added/updated.
-
-    # --- Return Values (Needs Update) ---
-    # The return signature needs to be updated to reflect the new outputs.
-    # 'graph_uri' might now point to an HTML file in GCS, or be removed if content is returned directly.
-    # 'pdf_content' is no longer relevant as we are not generating a PDF in this function.
-
-    if not standardized_recipe_gcs_uri:
-         raise RuntimeError("Standardized recipe GCS URI not found.")
-
-    # For now, we will return the local paths and content.
-    # The GCS upload and URI generation will be handled in the next steps.
-    # The 'pdf_content' key is replaced by 'html_content' for the main displayable output.
-    # 'graph_uri' will temporarily hold the local HTML file path.
-    # This will be updated once GCS upload for HTML file is implemented.
-
-    # Read HTML content as bytes for consistency with previous 'pdf_content' if needed by caller
-    # This is a temporary measure. Ideally, the caller adapts to string HTML content.
-    html_content_bytes = None
     try:
+        # Upload HTML file
         if html_file_path.exists():
-            html_content_bytes = html_file_path.read_bytes()
-    except IOError as e:
-        print(f"Warning: Could not read back HTML file for byte content: {e}")
+            html_destination_blob_name = f"{gcs_destination_directory}/{html_filename}"
+            upload_to_gcs(gcs_bucket_name, str(html_file_path), html_destination_blob_name)
+            html_gcs_uri = f"gs://{gcs_bucket_name}/{html_destination_blob_name}"
+            print(f"Successfully uploaded HTML to {html_gcs_uri}")
+        else:
+            print(f"HTML file {html_file_path} not found for upload.")
+
+        # Upload CSS file if it exists
+        if css_content and css_file_path.exists():
+            css_destination_blob_name = f"{gcs_destination_directory}/{css_filename}"
+            upload_to_gcs(gcs_bucket_name, str(css_file_path), css_destination_blob_name)
+            css_gcs_uri = f"gs://{gcs_bucket_name}/{css_destination_blob_name}"
+            print(f"Successfully uploaded CSS to {css_gcs_uri}")
+        elif css_content:
+            print(f"CSS file {css_file_path} not found for upload, though CSS content exists.")
+        else:
+            print(f"No CSS content to upload for {css_filename}")
+
+        # Upload JS file if it exists
+        if js_content and js_file_path.exists():
+            js_destination_blob_name = f"{gcs_destination_directory}/{js_filename}"
+            upload_to_gcs(gcs_bucket_name, str(js_file_path), js_destination_blob_name)
+            js_gcs_uri = f"gs://{gcs_bucket_name}/{js_destination_blob_name}"
+            print(f"Successfully uploaded JS to {js_gcs_uri}")
+        elif js_content:
+            print(f"JS file {js_file_path} not found for upload, though JS content exists.")
+        else:
+            print(f"No JavaScript content to upload for {js_filename}")
+
+    except Exception as e:
+        # Consider how to handle partial uploads. For now, raise an error.
+        raise RuntimeError(f"Failed to upload graph files to GCS: {e}") from e
+
+    # --- Cleanup Logic ---
+    # Local files can be cleaned up after successful upload.
+    # This cleanup should ideally be in a finally block to ensure execution
+    # even if GCS upload fails, but that might remove files needed for retry.
+    # For now, let's assume successful upload means we can remove them.
+    files_to_remove = [html_file_path, css_file_path, js_file_path]
+    for file_path in files_to_remove:
+        try:
+            if file_path.exists():
+                os.remove(file_path)
+                print(f"Successfully removed local file: {file_path}")
+        except OSError as e:
+            # Log error but don't let it crash the main process
+            print(f"Error removing local file {file_path}: {e}")
 
 
-    # --- Return GCS URIs and Local File Info ---
-    # Ensure standardized_recipe_gcs_uri is set (from earlier in the function)
+    # --- Return Values ---
     if not standardized_recipe_gcs_uri:
-         raise RuntimeError("Processing completed, but failed to obtain GCS URI for recipe text.")
+         raise RuntimeError("Standardized recipe GCS URI not found after processing.")
+    if not html_gcs_uri:
+        # HTML is considered essential, so if it's not uploaded, it's an error.
+        raise RuntimeError("HTML file GCS URI not found after processing.")
 
-    # The following return structure is temporary and will be finalized
-    # once GCS upload for HTML/CSS/JS is implemented.
-    # 'graph_uri' will eventually be the GCS URI of the main HTML file.
-    # 'pdf_content' is being phased out, using 'html_content_bytes' as a temporary substitute.
+
     return {
         "recipe_uri": standardized_recipe_gcs_uri,
-        "graph_uri": str(html_file_path), # Placeholder: local path, to be GCS URI
-        "pdf_content": html_content_bytes, # Placeholder: local HTML bytes, to be actual HTML content or URI
-        "html_content": html_content,
+        "html_gcs_uri": html_gcs_uri,
+        "css_gcs_uri": css_gcs_uri, # Will be None if no CSS content/upload
+        "js_gcs_uri": js_gcs_uri,   # Will be None if no JS content/upload
+        "html_content": html_content, # Still returning content for potential direct use
         "css_content": css_content,
         "js_content": js_content,
-        "local_html_path": str(html_file_path),
-        "local_css_path": str(css_file_path) if css_content else None,
-        "local_js_path": str(js_file_path) if js_content else None,
+        # Deprecating pdf_content and graph_uri (local path)
+        # "graph_uri": str(html_file_path),
+        # "pdf_content": html_content_bytes, # html_content_bytes is also removed
+        # Removing local paths from direct return as GCS URIs are primary
+        # "local_html_path": str(html_file_path),
+        # "local_css_path": str(css_file_path) if css_content else None,
+        # "local_js_path": str(js_file_path) if js_content else None,
     }
 # --- End text_to_graph ---
 
