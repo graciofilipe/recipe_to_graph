@@ -249,4 +249,29 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             st.error(f"An error occurred while preparing the HTML graph for display: {e}")
     else:
         st.warning("HTML, CSS, or JavaScript content not found in results. Cannot display graph.")
+
+    # --- Download Buttons ---
+    if html_content:
+        st.download_button(
+            label="Download HTML",
+            data=html_content,
+            file_name=f"{st.session_state.recipe_name}_index.html",
+            mime="text/html"
+        )
+    if css_content:
+        st.download_button(
+            label="Download CSS",
+            data=css_content,
+            file_name=f"{st.session_state.recipe_name}_style.css",
+            mime="text/css"
+        )
+    if js_content:
+        st.download_button(
+            label="Download JavaScript",
+            data=js_content,
+            file_name=f"{st.session_state.recipe_name}_script.js",
+            mime="application/javascript"
+        )
+    # --- End Download Buttons ---
+
     # --- End Display HTML/CSS/JS Graph ---
