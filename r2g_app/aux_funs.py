@@ -136,7 +136,7 @@ def save_files(parsed_content: dict, output_directory: str = "."):
     import os
     os.makedirs(output_directory, exist_ok=True)
     for filename, content in parsed_content.items():
-    filepath = os.path.join(output_directory, filename)
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
-    print(f"Saving {filename} to {filepath}")
+        filepath = os.path.join(output_directory, filename)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"Saving {filename} to {filepath}")
