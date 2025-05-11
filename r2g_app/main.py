@@ -11,7 +11,7 @@ from .genai_funs import (
 )
 from datetime import date # Import date from datetime
 # Updated import from aux_funs
-from .aux_funs import create_python_file_from_string, upload_to_gcs, parse_code_string
+from .aux_funs import upload_to_gcs, parse_code_string
 # Import the new prompt along with existing ones
 from .aux_vars import (
     GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT,
