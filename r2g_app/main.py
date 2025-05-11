@@ -1,4 +1,5 @@
 import os
+import re # Add import for regular expressions
 # Removed argparse import
 from .genai_funs import generate_graph, re_write_recipe, improve_graph, draft_to_recipe
 # Import constants from genai_funs
@@ -9,7 +10,8 @@ from .genai_funs import (
     GRAPH_GEN_TEMP, GRAPH_IMPROVE_TEMP
 )
 from datetime import date # Import date from datetime
-from .aux_funs import create_python_file_from_string, upload_to_gcs
+# Updated import from aux_funs
+from .aux_funs import create_python_file_from_string, upload_to_gcs, parse_html_css_js_output
 # Import the new prompt along with existing ones
 from .aux_vars import (
     GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT,
@@ -206,93 +208,114 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
     # --- End AI Processing: Graph ---
 
 
-    # --- Execute Graph Code, Upload PDF, and Cleanup ---
-    # Define dynamically generated filenames
-    final_graph_base_name = f"{recipe_name}_final_{today_str}"
-    final_pdf_filename = f"{final_graph_base_name}.pdf"
-    final_script_name = f"{recipe_name}_final_graph_script_{today_str}.py"
-    final_dot_filename = f"{final_graph_base_name}.gv" # Define .gv filename for cleanup
-    final_pdf_gcs_uri = None
+    # --- Process Improved Graph Code ---
+    # Call the imported function
+    parsed_content = parse_html_css_js_output(improved_graph_code)
+    html_content = parsed_content.get("html", "")
+    css_content = parsed_content.get("css", "")
+    js_content = parsed_content.get("js", "")
 
-    # Paths for local files
-    final_script_path = Path(final_script_name)
-    final_pdf_path = Path(final_pdf_filename)
-    final_dot_path = Path(final_dot_filename)
+    if not html_content:
+        # Or handle this more gracefully depending on requirements
+        raise RuntimeError("HTML content could not be parsed from improved_graph_code.")
 
+    # --- Define Local Filenames ---
+    base_filename = f"{recipe_name}_{today_str}"
+    html_filename = f"{base_filename}_index.html"
+    css_filename = f"{base_filename}_style.css"
+    js_filename = f"{base_filename}_script.js"
+
+    html_file_path = Path(html_filename)
+    css_file_path = Path(css_filename)
+    js_file_path = Path(js_filename)
+
+    # --- Write Content to Local Files ---
     try:
-        # Replace default filename ('recipe_flow') in the improved code
-        # Ensure the replacement uses the final base name
-        improved_graph_code_final = improved_graph_code.replace("'recipe_flow'", f"'{final_graph_base_name}'")
-        improved_graph_code_final = improved_graph_code_final.replace('"recipe_flow"', f'"{final_graph_base_name}"') # Handle double quotes too
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        print(f"Successfully wrote HTML to {html_file_path}")
 
-        # Write the final python script locally
-        create_python_file_from_string(improved_graph_code_final, filename=str(final_script_path))
-        print(f"Executing final graph script: {final_script_path}") # Keep print
-
-        # Execute the script to generate the PDF and .gv file
-        # TODO: Add better error checking for os.system if possible (e.g., check return code)
-        # For now, we rely on the PDF existence check below.
-        exit_code = os.system(f"python {final_script_path}")
-        if exit_code != 0:
-             raise RuntimeError(f"Final graph script '{final_script_path}' execution failed with exit code {exit_code}.")
-        print(f"Final graph script execution finished (check '{final_pdf_path}').") # Keep print
-
-        # --- Upload final PDF to GCS ---
-        pdf_content_bytes = None # Initialize variable
-        if final_pdf_path.is_file():
-            # Read the PDF content *before* uploading
-            try:
-                pdf_content_bytes = final_pdf_path.read_bytes()
-                print(f"Successfully read {len(pdf_content_bytes)} bytes from {final_pdf_path}") # Keep print
-            except IOError as e:
-                raise RuntimeError(f"Failed to read generated PDF file '{final_pdf_path}': {e}") from e
-
-            print(f"Uploading final PDF to GCS: gs://{gcs_bucket_name}/{final_pdf_filename}") # Keep print
-            # Use the existing aux_fun for uploading files
-            upload_to_gcs(gcs_bucket_name, str(final_pdf_path), final_pdf_filename)
-            final_pdf_gcs_uri = f"gs://{gcs_bucket_name}/{final_pdf_filename}"
-            print(f"Successfully uploaded final PDF to {final_pdf_gcs_uri}") # Keep print
+        if css_content: # Only write if CSS content exists
+            with open(css_file_path, "w", encoding="utf-8") as f:
+                f.write(css_content)
+            print(f"Successfully wrote CSS to {css_file_path}")
         else:
-            # Raise an error if PDF wasn't created by the script
-            raise RuntimeError(f"Final PDF file '{final_pdf_path}' was not generated by the script.")
-
-    except (IOError, OSError, RuntimeError, Exception) as e:
-        # Catch errors during script writing, execution, or GCS upload
-        raise RuntimeError(f"Failed during final graph script execution or PDF upload: {e}") from e
-
-    finally:
-        # --- Cleanup Local Files ---
-        # Ensure cleanup happens even if errors occurred above
-        files_to_remove = [final_script_path, final_pdf_path, final_dot_path]
-        for file_path in files_to_remove:
-            try:
-                if file_path.exists():
-                    file_path.unlink()
-                    print(f"Cleaned up local file: {file_path}") # Keep print for server logs
-            except OSError as e:
-                 # Log cleanup warnings but don't raise fatal errors
-                print(f"Warning: Could not remove local file {file_path}: {e}")
-        # --- End Cleanup ---
-
-    # --- Return GCS URIs ---
-    # Ensure both URIs are set before returning
-    if not standardized_recipe_gcs_uri or not final_pdf_gcs_uri:
-         # This indicates an issue potentially missed by earlier checks
-         raise RuntimeError("Processing completed, but failed to obtain GCS URIs for recipe or graph.")
-
-    # Ensure pdf_content_bytes is not None if PDF was supposed to be generated
-    if final_pdf_gcs_uri and pdf_content_bytes is None:
-         # This case should ideally be caught earlier, but serves as a final check
-         raise RuntimeError("PDF was uploaded to GCS, but its content could not be read locally.")
+            print(f"No CSS content to write for {css_filename}")
 
 
+        if js_content: # Only write if JS content exists
+            with open(js_file_path, "w", encoding="utf-8") as f:
+                f.write(js_content)
+            print(f"Successfully wrote JavaScript to {js_file_path}")
+        else:
+            print(f"No JavaScript content to write for {js_filename}")
+
+    except IOError as e:
+        raise RuntimeError(f"Failed to write graph content to local files: {e}") from e
+
+    # --- TODO: Upload HTML, CSS, JS to GCS (or handle as needed) ---
+    # This will be handled in a subsequent step.
+    # For now, the files are written locally.
+
+    # --- Cleanup Logic (Marked for Update) ---
+    # Add new files to cleanup list
+    # The old cleanup logic for .py, .pdf, .gv files is no longer directly applicable.
+    # This section needs to be revised based on what files (if any) are
+    # created and need cleanup in the new workflow.
+
+    files_to_remove_later = [html_file_path, css_file_path, js_file_path]
+    # The actual removal will happen in the finally block, which needs to be added/updated.
+
+    # --- Return Values (Needs Update) ---
+    # The return signature needs to be updated to reflect the new outputs.
+    # 'graph_uri' might now point to an HTML file in GCS, or be removed if content is returned directly.
+    # 'pdf_content' is no longer relevant as we are not generating a PDF in this function.
+
+    if not standardized_recipe_gcs_uri:
+         raise RuntimeError("Standardized recipe GCS URI not found.")
+
+    # For now, we will return the local paths and content.
+    # The GCS upload and URI generation will be handled in the next steps.
+    # The 'pdf_content' key is replaced by 'html_content' for the main displayable output.
+    # 'graph_uri' will temporarily hold the local HTML file path.
+    # This will be updated once GCS upload for HTML file is implemented.
+
+    # Read HTML content as bytes for consistency with previous 'pdf_content' if needed by caller
+    # This is a temporary measure. Ideally, the caller adapts to string HTML content.
+    html_content_bytes = None
+    try:
+        if html_file_path.exists():
+            html_content_bytes = html_file_path.read_bytes()
+    except IOError as e:
+        print(f"Warning: Could not read back HTML file for byte content: {e}")
+
+
+    # --- Return GCS URIs and Local File Info ---
+    # Ensure standardized_recipe_gcs_uri is set (from earlier in the function)
+    if not standardized_recipe_gcs_uri:
+         raise RuntimeError("Processing completed, but failed to obtain GCS URI for recipe text.")
+
+    # The following return structure is temporary and will be finalized
+    # once GCS upload for HTML/CSS/JS is implemented.
+    # 'graph_uri' will eventually be the GCS URI of the main HTML file.
+    # 'pdf_content' is being phased out, using 'html_content_bytes' as a temporary substitute.
     return {
         "recipe_uri": standardized_recipe_gcs_uri,
-        "graph_uri": final_pdf_gcs_uri,
-        "pdf_content": pdf_content_bytes # Add the PDF content bytes
+        "graph_uri": str(html_file_path), # Placeholder: local path, to be GCS URI
+        "pdf_content": html_content_bytes, # Placeholder: local HTML bytes, to be actual HTML content or URI
+        "html_content": html_content,
+        "css_content": css_content,
+        "js_content": js_content,
+        "local_html_path": str(html_file_path),
+        "local_css_path": str(css_file_path) if css_content else None,
+        "local_js_path": str(js_file_path) if js_content else None,
     }
 # --- End text_to_graph ---
 
+# --- Helper function _parse_improved_graph_output removed ---
+# It has been moved to r2g_app/aux_funs.py and renamed to parse_html_css_js_output
+
+# --- Duplicated text_to_graph function (and its content) also removed ---
 
 # --- New Function: revise_recipe ---
 def revise_recipe(original_draft: str, current_standardised_recipe: str, user_feedback: str, project_id: str) -> str:
