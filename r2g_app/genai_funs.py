@@ -7,8 +7,6 @@ from google.genai import types
 # --- Centralized Configuration Constants ---
 PROJECT_ID = os.getenv("PROJECT_ID")
 DEFAULT_VERTEX_LOCATION = "us-central1"
-#DEFAULT_MODEL_NAME = "gemini-2.5-pro-exp-03-25" 
-#DEFAULT_MODEL_NAME = "gemini-2.5-pro-preview-05-06" # To be removed
 PROCESS_TEXT_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
 TEXT_TO_GRAPH_MODEL_NAME = "gemini-2.5-pro-preview-05-06"
 DEFAULT_TOP_P = 1.0
