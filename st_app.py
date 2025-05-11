@@ -173,51 +173,80 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
 
     results = st.session_state.graph_results # Get results from session state
     recipe_uri = results.get("recipe_uri")
-    graph_uri = results.get("graph_uri")
+    html_uri = results.get("html_uri") # Added
+    css_uri = results.get("css_uri")    # Added
+    js_uri = results.get("js_uri")      # Added
 
     if recipe_uri:
         recipe_link = create_gcs_link(recipe_uri)
         if recipe_link:
-                st.markdown(f"**Standardized Recipe:** [View in GCS Console]({recipe_link}) (`{recipe_uri}`)")
+            st.markdown(f"**Standardized Recipe:** [View in GCS Console]({recipe_link}) (`{recipe_uri}`)")
         else:
-                st.markdown(f"**Standardized Recipe:** `{recipe_uri}`") # Fallback if link creation fails
+            st.markdown(f"**Standardized Recipe:** `{recipe_uri}`") # Fallback if link creation fails
     else:
         st.warning("Standardized recipe GCS URI not found in results.")
 
-    if graph_uri:
-        graph_link = create_gcs_link(graph_uri)
-        if graph_link:
-            st.markdown(f"**Recipe Graph PDF:** [View in GCS Console]({graph_link}) (`{graph_uri}`)")
+    if html_uri:
+        html_link = create_gcs_link(html_uri)
+        if html_link:
+            st.markdown(f"**Recipe Graph HTML:** [View in GCS Console]({html_link}) (`{html_uri}`)")
         else:
-            st.markdown(f"**Recipe Graph PDF:** `{graph_uri}`") # Fallback if link creation fails
+            st.markdown(f"**Recipe Graph HTML:** `{html_uri}`")
     else:
-        st.warning("Recipe graph GCS URI not found in results.")
+        st.warning("Recipe graph HTML URI not found in results.")
 
-    # --- Display PDF and Download Button ---
-    pdf_content_bytes = results.get("pdf_content")
-    if pdf_content_bytes:
+    if css_uri:
+        css_link = create_gcs_link(css_uri)
+        if css_link:
+            st.markdown(f"**Recipe Graph CSS:** [View in GCS Console]({css_link}) (`{css_uri}`)")
+        else:
+            st.markdown(f"**Recipe Graph CSS:** `{css_uri}`")
+    else:
+        # This is not a warning as CSS might be embedded or not always separate
+        st.info("Recipe graph CSS URI not found in results (it might be embedded in HTML).")
+
+    if js_uri:
+        js_link = create_gcs_link(js_uri)
+        if js_link:
+            st.markdown(f"**Recipe Graph JS:** [View in GCS Console]({js_link}) (`{js_uri}`)")
+        else:
+            st.markdown(f"**Recipe Graph JS:** `{js_uri}`")
+    else:
+        # This is not a warning as JS might be embedded or not always separate
+        st.info("Recipe graph JS URI not found in results (it might be embedded in HTML).")
+
+
+    # --- Display HTML/CSS/JS Graph ---
+    html_content = results.get("html_content")
+    css_content = results.get("css_content")
+    js_content = results.get("js_content")
+
+    if html_content and css_content and js_content:
         try:
-            # Generate filename for download
-            today_str = datetime.date.today().strftime("%Y_%m_%d")
-            pdf_filename = f"{st.session_state.recipe_name}_graph_{today_str}.pdf"
-
-            # Add download button
-            st.download_button(
-                label="Download Graph PDF",
-                data=pdf_content_bytes,
-                file_name=pdf_filename,
-                mime="application/pdf",
-            )
-
-            # Display PDF inline using base64 embedding
+            # Embed CSS and JavaScript into the HTML
+            full_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Recipe Graph</title>
+                <style>
+                    {css_content}
+                </style>
+            </head>
+            <body>
+                {html_content}
+                <script>
+                    {js_content}
+                </script>
+            </body>
+            </html>
+            """
             st.subheader("Generated Recipe Graph:")
-            base64_pdf = base64.b64encode(pdf_content_bytes).decode('utf-8')
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="500" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
+            st.components.v1.html(full_html, height=600, scrolling=True)
 
         except Exception as e:
-            st.error(f"An error occurred while preparing the PDF for display/download: {e}")
-
+            st.error(f"An error occurred while preparing the HTML graph for display: {e}")
     else:
-        st.warning("PDF content not found in results. Cannot display or provide download.")
-    # --- End Display PDF and Download Button ---
+        st.warning("HTML, CSS, or JavaScript content not found in results. Cannot display graph.")
+    # --- End Display HTML/CSS/JS Graph ---
