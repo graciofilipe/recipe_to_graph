@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt 
 
 RUN apt update
-RUN apt install -y graphviz
+#RUN apt install -y graphviz
 
 
 # Optional: Set PYTHONPATH if your simulation code uses relative imports across modules
