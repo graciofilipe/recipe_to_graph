@@ -185,6 +185,19 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         if not first_pass_graph_code:
              raise RuntimeError("Initial graph code generation returned empty result.")
 
+        # --- Upload first_pass_graph_code to GCS ---
+        unprocessed_graph_filename = f"unprocessed_{recipe_name}_{today_str}.txt"
+        unprocessed_graph_gcs_uri = None
+        try:
+            print(f"Uploading unprocessed graph code to GCS: gs://{gcs_bucket_name}/{unprocessed_graph_filename}")
+            unprocessed_blob = bucket.blob(unprocessed_graph_filename)
+            unprocessed_blob.upload_from_string(first_pass_graph_code, content_type='text/plain; charset=utf-8')
+            unprocessed_graph_gcs_uri = f"gs://{gcs_bucket_name}/{unprocessed_graph_filename}"
+            print(f"Successfully uploaded unprocessed graph code to {unprocessed_graph_gcs_uri}")
+        except Exception as e:
+            print(f"Warning: Failed to upload unprocessed graph code to GCS: {e}")
+        # --- End Upload first_pass_graph_code to GCS ---
+
         print("Improving graph code...") # Keep print
         # Use imported constants
         improved_graph_code = improve_graph(
