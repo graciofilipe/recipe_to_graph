@@ -243,7 +243,7 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             </html>
             """
             st.subheader("Generated Recipe Graph:")
-            st.components.v1.html(full_html, height=600, scrolling=True)
+            st.components.v1.html(full_html, height=800, scrolling=True)
 
         except Exception as e:
             st.error(f"An error occurred while preparing the HTML graph for display: {e}")
