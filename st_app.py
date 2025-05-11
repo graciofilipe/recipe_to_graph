@@ -7,6 +7,8 @@ from r2g_app.main import process_text, text_to_graph
 from r2g_app.main import revise_recipe
 import re # Import re for GCS link validation/parsing (optional but good practice)
 
+st.set_page_config(layout="wide") # Set page layout to wide
+
 # Initialize session state variables
 if "standardized_recipe_text" not in st.session_state:
     st.session_state.standardized_recipe_text = ""
