@@ -11,7 +11,7 @@ from .genai_funs import (
 )
 from datetime import date # Import date from datetime
 # Updated import from aux_funs
-from .aux_funs import create_python_file_from_string, upload_to_gcs, parse_html_css_js_output
+from .aux_funs import create_python_file_from_string, upload_to_gcs, parse_code_string
 # Import the new prompt along with existing ones
 from .aux_vars import (
     GENERATE_GRAPH_SYS_PROMPT, IMPROVE_GRAPH_SYS_PROMPT,
@@ -223,10 +223,10 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
 
     # --- Process Improved Graph Code ---
     # Call the imported function
-    parsed_content = parse_html_css_js_output(improved_graph_code)
-    html_content = parsed_content.get("html", "")
-    css_content = parsed_content.get("css", "")
-    js_content = parsed_content.get("js", "")
+    parsed_content = parse_code_string(improved_graph_code)
+    html_content = parsed_content.get("index.html", "")
+    css_content = parsed_content.get("style.css", "")
+    js_content = parsed_content.get("script.js", "")
 
     if not html_content:
         # Or handle this more gracefully depending on requirements
