@@ -246,34 +246,3 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
             file_name="script.js",
             mime="application/javascript"
         )
-
-    # Initialize graph_nodes_html with a generic fallback message
-    # graph_nodes_html = "<p>An unexpected issue occurred while preparing graph data.</p>"
-
-    # if not html_content or not css_content: # Basic check for HTML/CSS
-    #     st.warning("HTML or CSS content not found in results. Cannot display graph fully.")
-        # graph_nodes_html might still be useful if js_content is processed,
-        # but the overall display will be broken. For now, we let it proceed.
-        # If js_content is also missing, the message below will take precedence.
-
-    # if not js_content:
-    #     graph_nodes_html = "<p>JavaScript content for the graph was not found in the AI's response. Unable to render graph.</p>"
-    # else:
-    #     try:
-    #         graph_data_py = None # Initialize to None
-    #         import re
-    #         import json
-    #         # Regex to find "const graphData = {" up to its corresponding "};"
-    #         match = re.search(r"const\s+graphData\s*=\s*(\{[\s\S]*?\n\}\s*;)", js_content, re.DOTALL)
-
-    #         if match:
-    #             graph_data_str = match.group(1).strip().rstrip(';')
-    #             # print(f"DEBUG: graph_data_str: {graph_data_str}")
-    #             try:
-    #                 graph_data_py = json.loads(graph_data_str)
-    #                 # print(f"DEBUG: Parsed graphData (Python Dict): {graph_data_py}")
-    #             except json.JSONDecodeError as e:
-    #                 # print(f"DEBUG: Error parsing graphData string with json.loads: {e}")
-    #                 # print(f"DEBUG: Problematic graph_data_str for JSON parsing: {graph_data_str}")
-    #                 graph_nodes_html = "<p>The graph data object found in the JavaScript was improperly formatted (not valid JSON). Unable to render graph.</p>"
-    #         else:

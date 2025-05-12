@@ -326,23 +326,13 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         "js_gcs_uri": js_gcs_uri,   # Will be None if no JS content/upload
         "html_content": html_content, # Still returning content for potential direct use
         "css_content": css_content,
-        "js_content": js_content,
-        # Deprecating pdf_content and graph_uri (local path)
-        # "graph_uri": str(html_file_path),
-        # "pdf_content": html_content_bytes, # html_content_bytes is also removed
-        # Removing local paths from direct return as GCS URIs are primary
-        # "local_html_path": str(html_file_path),
-        # "local_css_path": str(css_file_path) if css_content else None,
-        # "local_js_path": str(js_file_path) if js_content else None,
+        "js_content": js_content
     }
 # --- End text_to_graph ---
 
-# --- Helper function _parse_improved_graph_output removed ---
-# It has been moved to r2g_app/aux_funs.py and renamed to parse_html_css_js_output
 
-# --- Duplicated text_to_graph function (and its content) also removed ---
 
-# --- New Function: revise_recipe ---
+
 def revise_recipe(original_draft: str, current_standardised_recipe: str, user_feedback: str, project_id: str) -> str:
     '''
     Revises a standardized recipe based on user feedback using an AI model.
@@ -406,7 +396,3 @@ Based *only* on the User Feedback provided above, please revise the Current Stan
         print(f"Error during recipe revision: {e}") # Keep print for server logs
         # Re-raise the exception to be caught by the Streamlit app
         raise RuntimeError(f"AI processing failed during recipe revision: {e}") from e
-# --- End revise_recipe ---
-
-
-# --- Removed Command Line Interface ---
