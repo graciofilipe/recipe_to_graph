@@ -26,12 +26,6 @@ from google.cloud import storage
 from google.cloud.storage import Blob, Bucket
 
 
-# DEFAULT_GRAPH_SCRIPT_FILENAME = "create_graph.py" # Removed, generated dynamically
-# STANDARDISED_RECIPE_FILENAME = "standardised_recipe.txt" # Removed, generated dynamically
-# INITIAL_GRAPHVIZ_SOURCE = "initial_recipe_flow" # Removed, generated dynamically
-# FINAL_GRAPHVIZ_SOURCE = "recipe_flow" # Removed, generated dynamically
-
-
 # --- New Function: process_text ---
 def process_text(recipe_draft_text: str, project_id: str) -> str:
     """
