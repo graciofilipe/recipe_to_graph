@@ -224,6 +224,32 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
     js_content = results.get("js_content")
     # print(f"DEBUG: js_content: {js_content}")
 
+    # --- Display Graph Preview ---
+    if html_content and css_content and js_content:
+        st.subheader("Graph Preview:")
+        constructed_html = f"""
+        <html>
+        <head>
+        <style>
+        {css_content}
+        </style>
+        </head>
+        <body>
+        {html_content}
+        <script>
+        {js_content}
+        </script>
+        </body>
+        </html>
+        """
+        st.components.v1.html(constructed_html, height=600)
+    elif html_content:
+        # Fallback if CSS or JS is missing but HTML is present
+        st.subheader("Graph Preview (HTML only):")
+        st.components.v1.html(html_content, height=600)
+    else:
+        st.warning("HTML content for graph preview is not available.")
+
     # --- Add Download Buttons ---
     if html_content:
         st.download_button(
