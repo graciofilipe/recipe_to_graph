@@ -224,6 +224,29 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
     js_content = results.get("js_content")
     # print(f"DEBUG: js_content: {js_content}")
 
+    # --- Add Download Buttons ---
+    if html_content:
+        st.download_button(
+            label="Download HTML",
+            data=html_content,
+            file_name="index.html",
+            mime="text/html"
+        )
+    if css_content:
+        st.download_button(
+            label="Download CSS",
+            data=css_content,
+            file_name="style.css",
+            mime="text/css"
+        )
+    if js_content:
+        st.download_button(
+            label="Download JS",
+            data=js_content,
+            file_name="script.js",
+            mime="application/javascript"
+        )
+
     # Initialize graph_nodes_html with a generic fallback message
     # graph_nodes_html = "<p>An unexpected issue occurred while preparing graph data.</p>"
 
