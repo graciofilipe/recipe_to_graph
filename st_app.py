@@ -224,8 +224,15 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
     js_content = results.get("js_content")
     # print(f"DEBUG: js_content: {js_content}")
 
+    # --- For Graph Preview ---
+    preview_html_content = html_content # Start with original
+    if preview_html_content:
+        # Preprocess for preview: remove specific link and script tags
+        preview_html_content = re.sub(r'<link\s+rel="stylesheet"\s+href="style\.css"\s*\/?>', '', preview_html_content, flags=re.IGNORECASE)
+        preview_html_content = re.sub(r'<script\s+src="script\.js"\s*><\/script>', '', preview_html_content, flags=re.IGNORECASE)
+
     # --- Display Graph Preview ---
-    if html_content and css_content and js_content:
+    if preview_html_content and css_content and js_content: # Check preview_html_content
         st.subheader("Graph Preview:")
         constructed_html = f"""
         <html>
@@ -235,7 +242,7 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
         </style>
         </head>
         <body>
-        {html_content}
+        {preview_html_content} # Use the processed version for preview
         <script>
         {js_content}
         </script>
@@ -243,15 +250,14 @@ if st.session_state.recipe_approved and st.session_state.graph_results:
         </html>
         """
         st.components.v1.html(constructed_html, height=600)
-    elif html_content:
-        # Fallback if CSS or JS is missing but HTML is present
+    elif preview_html_content: # Fallback for preview if CSS or JS is missing
         st.subheader("Graph Preview (HTML only):")
-        st.components.v1.html(html_content, height=600)
+        st.components.v1.html(preview_html_content, height=600) # Use processed for preview
     else:
-        st.warning("HTML content for graph preview is not available.")
+        st.warning("HTML content for graph preview is not available or was removed.")
 
-    # --- Add Download Buttons ---
-    if html_content:
+    # --- Add Download Buttons (using original html_content) ---
+    if html_content: # Original html_content for download
         st.download_button(
             label="Download HTML",
             data=html_content,
