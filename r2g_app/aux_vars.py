@@ -103,7 +103,7 @@ Your output will be used by Agent-2 to create a `graphviz` diagram, so clarity, 
 
 **Key Principles:**
 
-1.  **Chef-Centric:** Frame everything from the perspective of a chef executing the recipe. Focus on *actions requiring the chef's attention*. Combine closely related or obvious actions into single steps (e.g., "Peel and chop the onions").
+1.  **Chef-Centric & Graph-Oriented:** Frame everything from the perspective of a chef. Focus on *actions requiring the chef's attention*. Combine closely related or sequential actions into single, coherent steps (e.g., "Peel and chop the onions"). Each step in your output should ideally correspond to a single action node in the final graph, with the detailed sub-actions described within that step.
 2.  **Conciseness:** Eliminate conversational language, anecdotes, and unnecessary descriptions. Preserve essential information about ingredients, quantities, and actions.
 3.  **Standardized Format:** Use a consistent structure (see "Output Format" below) to make it easy for Agent-2 to parse the recipe.
 4.  **Action-Oriented:** Use strong, imperative verbs (e.g., "Chop," "Simmer," "Combine"). Clearly define *what* the chef is doing and *to what*.
@@ -131,8 +131,8 @@ Your output will be used by Agent-2 to create a `graphviz` diagram, so clarity, 
         * "Simmer the sauce for 10 minutes."
         * "Add the garlic to the pan."
         * "Combine the flour and sugar in a large bowl."
-    * **Combine Minor, Sequential Actions:** If steps are logically part of a single chef action, combine them. Example: "Peel the potatoes. Dice the potatoes." becomes "Peel and dice the potatoes."
-    * **Combine Steps:** If two steps are adjacent in action and object (peel and chop the same ingredient, or dice and add to pot, or simmer and stir the same sauce), then the steps should be combined in a single step.
+    * **Combine Minor, Sequential Actions:** If multiple sub-actions form a single logical task for the chef, combine them into one step. Describe the sequence clearly within this single step. Example: "Peel the potatoes. Dice the potatoes. Place diced potatoes in a bowl of water." should become "Peel, dice, and place potatoes in a bowl of water." or "Prepare potatoes: peel, dice, and place in a bowl of water." The goal is to provide a consolidated action that Agent-2 can turn into a single node.
+    * **Combine Steps:** Consolidate adjacent steps that involve the same primary ingredient(s) or a continuous process. For example, "Dice onions. Add onions to pan. Sauté onions until translucent." should be combined into a single step like "Dice onions, add to pan, and sauté until translucent." or "Sauté diced onions until translucent."
     * **Omit adjustments and obvious steps:** Steps like "adjust seasoning" or "add salt" or "season to taste", or things like "add water if necessary" can be omitted - if they are not core to the recipe.
     * **Explicit Dependencies:** If a step *requires* a previous step to be completed, *state it clearly*. Examples:
         * "Once the sauce has thickened, add the cream."
@@ -214,7 +214,7 @@ GENERATE_GRAPH_SYS_PROMPT = """You are Agent-2, an HTML, CSS, and JavaScript cod
 Your input is a standardized recipe from Agent-1. Your *only* output is valid and executable HTML, CSS, and JavaScript code, structured into three distinct files: `index.html`, `style.css`, and `script.js`. \
 Provide the content for each file within fenced code blocks, clearly indicating the filename (e.g., ```html filename="index.html" ... ```). \
 No explanations or additional text outside of standard comments (e.g., `<!-- HTML comment -->`, `/* CSS comment */`, `// JavaScript comment`) are allowed. \
-The diagram is for a chef, so nodes must clearly represent actions and ingredients, and edges must represent the flow of time or materials in a way that is intuitive for culinary professionals. Redundancy is to be minimized to ensure clarity and focus on essential steps. \
+The diagram is for a chef, so nodes must clearly represent actions and ingredients, and edges must represent the flow of time or materials in a way that is intuitive for culinary professionals. Redundancy is to be aggressively minimized to ensure clarity and focus on essential steps. Prioritize fewer, more comprehensive nodes over many granular ones. \
 Verify HTML, CSS, and JavaScript syntactic correctness.
 
 **Output File Structure:**
@@ -263,9 +263,10 @@ Your output *must* be structured as follows:
 3. **Node Creation - Differentiated Types (for `script.js` `elements` and `style.css`):**
   *  All node IDs *must* be unique.
   *  **Action Nodes (Hands-on Chef Actions):**
-    *  Represent each significant chef action as a node. Combine trivial actions.
-    *  **Data Structure (in `script.js` `elements`):** `{ data: { id: 'unique_action_id', label: 'Chop Onions (5 min)', full_label: 'Detailed action description if needed', type: 'action' } }`. Use `label` for display, `full_label` for potential mouseover/tap.
-    *  **Label:** Start with a strong verb in *imperative* form. Include specific ingredient names, quantities, and time durations directly in the label. Keep it concise.
+    *  Represent significant chef actions as nodes. **Strongly prefer combining a sequence of related, sequential actions from the recipe text (even if listed as sub-steps by Agent-1) into a single action node.** For instance, if the input recipe has '1. Peel carrots. 2. Chop carrots. 3. Add carrots to bowl.', this should ideally become *one* action node in the graph, summarized appropriately.
+    *  **Data Structure (in `script.js` `elements`):** `{ data: { id: 'unique_action_id', label: 'Prepare Carrots', details: 'Peel carrots. Chop carrots. Add carrots to bowl.', type: 'action' } }`. (Ensure an explicit `details` field is consistently used for the full description).
+    *  **Utilize the `details` Field:** The `details` field in the node data structure is crucial. It **must** contain the specific sub-steps, multiple actions, or detailed explanation of the process represented by the node if the node combines several actions. The `label` should be a concise, high-level summary of this combined process.
+    *  **Label:** The `label` for an action node should be a concise, high-level summary of the overall action or combined actions (e.g., 'Prepare Mirepoix', 'Cook Aromatics', 'Simmer Sauce Base'). Specific ingredient details, quantities, and exact time durations are usually better placed in the `details` field, unless they are essential for the brief `label`. The `label` must be short. For example, instead of 'Sauté onion, celery, and carrot for 5-7 min.', the label could be 'Sauté Base Vegetables' and the `details` field would contain 'Add chopped onion, celery, and carrot to the pot; cook, stirring occasionally, for 5-7 minutes until softened.'
     *  **Styling (in `style.css`):** Target `node[type='action']`. Use a `shape: rectangle;` (Cytoscape.js maps this to a rectangle-like node).
 
   *  **Ingredient Nodes (Key Components):**
@@ -539,56 +540,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
  const elements = [
   // Nodes - Ingredients
-  { group: 'nodes', data: { id: "olive_oil", label: "Olive Oil", full_label: "4 tbsp Olive Oil", type: 'ingredient', colorInfo: { fill: "#F5F5DC", stroke: "#D2B48C" } } },
-  { group: 'nodes', data: { id: "onion", label: "Onion", full_label: "1 Lg Yellow Onion", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "celery", label: "Celery", full_label: "2 Celery Stalks", type: 'ingredient', colorInfo: { fill: "#90EE90", stroke: "#3CB371" } } },
-  { group: 'nodes', data: { id: "carrot", label: "Carrot", full_label: "1 Lg Carrot", type: 'ingredient', colorInfo: { fill: "#FFA500", stroke: "#E59400" } } },
-  { group: 'nodes', data: { id: "garlic", label: "Garlic", full_label: "4 Cloves Garlic", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "spices_measured", label: "Measured Spices", full_label: "Pepper, Turmeric, Cumin, Ginger, Cinnamon, Cayenne", type: 'ingredient', colorInfo: { fill: "#FFDD57", stroke: "#FFC107" } } },
-  { group: 'nodes', data: { id: "crushed_tomatoes", label: "Crushed Tomatoes", full_label: "2 Cans Crushed Tomatoes", type: 'ingredient', colorInfo: { fill: "#FF6347", stroke: "#E5533D" } } },
-  { group: 'nodes', data: { id: "tomato_paste", label: "Tomato Paste", full_label: "3 tbsp Tomato Paste", type: 'ingredient', colorInfo: { fill: "#B22222", stroke: "#8B0000" } } },
-  { group: 'nodes', data: { id: "fresh_cilantro", label: "Cilantro", full_label: "1 cup Cilantro", type: 'ingredient', colorInfo: { fill: "#2E8B57", stroke: "#228B22" } } },
-  { group: 'nodes', data: { id: "green_lentils", label: "Green Lentils", full_label: "1 cup Green Lentils", type: 'ingredient', colorInfo: { fill: "#8FBC8F", stroke: "#556B2F" } } },
-  { group: 'nodes', data: { id: "red_lentils", label: "Red Lentils", full_label: "1 cup Red Lentils", type: 'ingredient', colorInfo: { fill: "#CD5C5C", stroke: "#A52A2A" } } },
-  { group: 'nodes', data: { id: "chickpeas", label: "Chickpeas", full_label: "1 Can Chickpeas", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "veg_stock", label: "Veg Stock", full_label: "7 cups Veg Stock", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "salt", label: "Salt", full_label: "Salt to taste", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "opt_stock_water", label: "Opt. Stock/Water", full_label: "Optional Stock/Water", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "starch_choice", label: "Rice/Vermicelli", full_label: "¼ cup White Rice OR Vermicelli", type: 'ingredient' } },
-  { group: 'nodes', data: { id: "lemon_wedges", label: "Lemon Wedges", full_label: "Lemon Wedges for serving", type: 'ingredient', colorInfo: { fill: "#FFFACD", stroke: "#FFD700" } } },
+  { group: 'nodes', data: { id: "olive_oil", label: "4 tbsp Olive Oil", type: 'ingredient', colorInfo: { fill: "#F5F5DC", stroke: "#D2B48C" } } },
+  { group: 'nodes', data: { id: "onion", label: "1 Lg Yellow Onion", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "celery", label: "2 Celery Stalks", type: 'ingredient', colorInfo: { fill: "#90EE90", stroke: "#3CB371" } } },
+  { group: 'nodes', data: { id: "carrot", label: "1 Lg Carrot", type: 'ingredient', colorInfo: { fill: "#FFA500", stroke: "#E59400" } } },
+  { group: 'nodes', data: { id: "garlic", label: "4 Cloves Garlic", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "spices_measured", label: "Measured Spices (Pepper, Turmeric, etc.)", type: 'ingredient', colorInfo: { fill: "#FFDD57", stroke: "#FFC107" } } },
+  { group: 'nodes', data: { id: "crushed_tomatoes", label: "2 Cans Crushed Tomatoes", type: 'ingredient', colorInfo: { fill: "#FF6347", stroke: "#E5533D" } } },
+  { group: 'nodes', data: { id: "tomato_paste", label: "3 tbsp Tomato Paste", type: 'ingredient', colorInfo: { fill: "#B22222", stroke: "#8B0000" } } },
+  { group: 'nodes', data: { id: "fresh_cilantro", label: "1 cup Cilantro", type: 'ingredient', colorInfo: { fill: "#2E8B57", stroke: "#228B22" } } },
+  { group: 'nodes', data: { id: "green_lentils", label: "1 cup Green Lentils", type: 'ingredient', colorInfo: { fill: "#8FBC8F", stroke: "#556B2F" } } },
+  { group: 'nodes', data: { id: "red_lentils", label: "1 cup Red Lentils", type: 'ingredient', colorInfo: { fill: "#CD5C5C", stroke: "#A52A2A" } } },
+  { group: 'nodes', data: { id: "chickpeas", label: "1 Can Chickpeas", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "veg_stock", label: "7 cups Veg Stock", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "salt", label: "Salt to taste", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "opt_stock_water", label: "Optional Stock/Water", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "starch_choice", label: "¼ cup Rice/Vermicelli", type: 'ingredient' } },
+  { group: 'nodes', data: { id: "lemon_wedges", label: "Lemon Wedges for serving", type: 'ingredient', colorInfo: { fill: "#FFFACD", stroke: "#FFD700" } } },
 
   // Nodes - Sections (Compound Parents)
-  { group: 'nodes', data: { id: "PrepAromatics", label: "Prep Aromatics", full_label: "1. Prepare Aromatics & Spices", type: 'section' }, classes: 'parent-node' },
-  { group: 'nodes', data: { id: "CombineMain", label: "Combine Main", full_label: "2. Combine Main Ingredients", type: 'section' }, classes: 'parent-node' },
-  { group: 'nodes', data: { id: "SimmerSoup", label: "Simmer Soup", full_label: "3. Simmer the Soup", type: 'section' }, classes: 'parent-node' },
-  { group: 'nodes', data: { id: "FinishStarch", label: "Finish Starch", full_label: "4. Finish with Rice/Vermicelli", type: 'section' }, classes: 'parent-node' },
-  { group: 'nodes', data: { id: "Serve", label: "Serve", full_label: "5. Serving", type: 'section' }, classes: 'parent-node' },
+  { group: 'nodes', data: { id: "PrepAromatics", label: "1. Prepare Aromatics & Spices", type: 'section' }, classes: 'parent-node' },
+  { group: 'nodes', data: { id: "CombineMain", label: "2. Combine Main Ingredients", type: 'section' }, classes: 'parent-node' },
+  { group: 'nodes', data: { id: "SimmerSoup", label: "3. Simmer the Soup", type: 'section' }, classes: 'parent-node' },
+  { group: 'nodes', data: { id: "FinishStarch", label: "4. Finish with Rice/Vermicelli", type: 'section' }, classes: 'parent-node' },
+  { group: 'nodes', data: { id: "Serve", label: "5. Serving", type: 'section' }, classes: 'parent-node' },
 
   // Nodes - Action Steps
-  { group: 'nodes', data: { id: "prep_veg_spices", label: "Prep Veg & Spices", full_label: "Finely chop onion, celery, carrot; mince garlic; measure spices.", type: 'action', parent: "PrepAromatics", details: "Finely chop onion, celery, and carrot; mince garlic; measure black pepper, turmeric, cumin, ginger, cinnamon, and cayenne pepper into a small bowl." } },
-  { group: 'nodes', data: { id: "heat_oil", label: "Heat Oil", full_label: "Heat 4 tbsp olive oil until shimmering.", type: 'action', parent: "PrepAromatics", details: "Heat 4 tbsp olive oil in a large pot or Dutch oven over medium heat until shimmering." } },
-  { group: 'nodes', data: { id: "cook_base_veg", label: "Sauté Veg (5-7m)", full_label: "Sauté onion, celery, carrot for 5-7 min.", type: 'action', parent: "PrepAromatics", details: "Add chopped onion, celery, and carrot to the pot; cook, stirring occasionally, for 5-7 minutes until softened." } },
-  { group: 'nodes', data: { id: "add_garlic_spices_to_pot", label: "Add Garlic & Spices (1-2m)", full_label: "Add garlic & spices, stir 1-2 min.", type: 'action', parent: "PrepAromatics", details: "Add minced garlic and measured spices to the pot; stir constantly for 1-2 minutes until fragrant." } },
+  { group: 'nodes', data: { id: "prep_veg_spices", label: "Prep Aromatics & Spices", type: 'action', parent: "PrepAromatics", details: "Finely chop onion, celery, and carrot; mince garlic; measure black pepper, turmeric, cumin, ginger, cinnamon, and cayenne pepper into a small bowl." } },
+  { group: 'nodes', data: { id: "heat_oil", label: "Heat Oil", type: 'action', parent: "PrepAromatics", details: "Heat 4 tbsp olive oil in a large pot or Dutch oven over medium heat until shimmering." } },
+  { group: 'nodes', data: { id: "cook_base_veg", label: "Sauté Base Vegetables", type: 'action', parent: "PrepAromatics", details: "Add chopped onion, celery, and carrot to the pot; cook, stirring occasionally, for 5-7 minutes until softened." } },
+  { group: 'nodes', data: { id: "add_garlic_spices_to_pot", label: "Bloom Garlic & Spices", type: 'action', parent: "PrepAromatics", details: "Add minced garlic and measured spices to the pot; stir constantly for 1-2 minutes until fragrant." } },
 
-  { group: 'nodes', data: { id: "prep_lentils_etc", label: "Prep Lentils, Chickpeas, Cilantro", full_label: "Rinse lentils, chickpeas; chop cilantro.", type: 'action', parent: "CombineMain", details: "Rinse green lentils and red lentils; drain and rinse chickpeas; chop cilantro." } },
-  { group: 'nodes', data: { id: "add_tomatoes", label: "Stir in Tomatoes", full_label: "Stir in crushed tomatoes & tomato paste.", type: 'action', parent: "CombineMain", details: "After aromatics are fragrant, stir crushed tomatoes and tomato paste into the pot until combined." } },
-  { group: 'nodes', data: { id: "add_remaining_main", label: "Add Cilantro, Lentils, Chickpeas", full_label: "Add cilantro, lentils, chickpeas; stir.", type: 'action', parent: "CombineMain", details: "Add chopped cilantro, rinsed green lentils, rinsed red lentils, and drained chickpeas to the pot; stir to combine." } },
-  { group: 'nodes', data: { id: "add_stock", label: "Pour in Stock", full_label: "Pour in 7 cups vegetable stock.", type: 'action', parent: "CombineMain", details: "Pour in 7 cups vegetable stock." } },
+  { group: 'nodes', data: { id: "prep_lentils_etc", label: "Prep Legumes & Herbs", type: 'action', parent: "CombineMain", details: "Rinse green lentils and red lentils; drain and rinse chickpeas; chop cilantro." } },
+  { group: 'nodes', data: { id: "add_tomatoes", label: "Add Tomato Products", type: 'action', parent: "CombineMain", details: "After aromatics are fragrant, stir crushed tomatoes and tomato paste into the pot until combined." } },
+  { group: 'nodes', data: { id: "add_remaining_main", label: "Add Remaining Main Ingredients", type: 'action', parent: "CombineMain", details: "Add chopped cilantro, rinsed green lentils, rinsed red lentils, and drained chickpeas to the pot; stir to combine." } },
+  { group: 'nodes', data: { id: "add_stock", label: "Add Stock", type: 'action', parent: "CombineMain", details: "Pour in 7 cups vegetable stock." } },
 
-  { group: 'nodes', data: { id: "bring_to_boil", label: "Bring to Boil", full_label: "Increase heat and bring soup to a boil.", type: 'action', parent: "SimmerSoup", details: "Increase heat to medium-high and bring soup to a boil." } },
-  { group: 'nodes', data: { id: "gentle_boil", label: "Gentle Boil (5m)", full_label: "Boil gently for 5 minutes.", type: 'action', parent: "SimmerSoup", details: "Boil gently for 5 minutes." } },
-  { group: 'nodes', data: { id: "simmer_covered", label: "Simmer Covered (45-50m)", full_label: "Cover and simmer for 45-50 min.", type: 'action', parent: "SimmerSoup", details: "Reduce heat to low, cover pot tightly, and simmer for 45-50 minutes, stirring occasionally." } },
-  { group: 'nodes', data: { id: "check_lentils_tender", label: "Check Lentils", full_label: "Check lentils for tenderness.", type: 'action', parent: "SimmerSoup", details: "Check lentils for tenderness (should be fully cooked and soft)." } },
-  { group: 'nodes', data: { id: "adjust_consistency", label: "Adjust Thickness", full_label: "Adjust soup thickness if needed.", type: 'action', parent: "SimmerSoup", details: "Assess soup thickness; if too thick, stir in additional vegetable stock or hot water, ½ cup at a time, until desired consistency is reached." } },
-  { group: 'nodes', data: { id: "season_to_taste", label: "Season w/ Salt", full_label: "Taste and season with salt.", type: 'action', parent: "SimmerSoup", details: "Taste soup and season with salt as needed." } },
+  { group: 'nodes', data: { id: "bring_to_boil", label: "Bring to Boil", type: 'action', parent: "SimmerSoup", details: "Increase heat to medium-high and bring soup to a boil." } },
+  { group: 'nodes', data: { id: "gentle_boil", label: "Gentle Boil", type: 'action', parent: "SimmerSoup", details: "Boil gently for 5 minutes." } },
+  { group: 'nodes', data: { id: "simmer_covered", label: "Simmer Covered", type: 'action', parent: "SimmerSoup", details: "Reduce heat to low, cover pot tightly, and simmer for 45-50 minutes, stirring occasionally." } },
+  { group: 'nodes', data: { id: "check_lentils_tender", label: "Check Lentil Tenderness", type: 'action', parent: "SimmerSoup", details: "Check lentils for tenderness (should be fully cooked and soft)." } },
+  { group: 'nodes', data: { id: "adjust_consistency", label: "Adjust Consistency", type: 'action', parent: "SimmerSoup", details: "Assess soup thickness; if too thick, stir in additional vegetable stock or hot water, ½ cup at a time, until desired consistency is reached." } },
+  { group: 'nodes', data: { id: "season_to_taste", label: "Season to Taste", type: 'action', parent: "SimmerSoup", details: "Taste soup and season with salt as needed." } },
 
-  { group: 'nodes', data: { id: "prep_starch", label: "Prep Rice/Vermi", full_label: "Rinse rice (if using).", type: 'action', parent: "FinishStarch", details: "Rinse long-grain white rice (if using). Vermicelli needs no prep." } },
-  { group: 'nodes', data: { id: "add_starch_to_soup", label: "Add Starch", full_label: "Stir rice OR vermicelli into soup.", type: 'action', parent: "FinishStarch", details: "Stir rinsed rice OR broken vermicelli pasta into the soup." } },
-  { group: 'nodes', data: { id: "simmer_starch_cooked", label: "Simmer Starch (5-20m)", full_label: "Simmer until starch is cooked.", type: 'action', parent: "FinishStarch", details: "Continue simmering, uncovered or partially covered, stirring occasionally, until rice is cooked (15-20 minutes) OR vermicelli is cooked (5-10 minutes)." } },
+  { group: 'nodes', data: { id: "prep_starch", label: "Prep Starch", type: 'action', parent: "FinishStarch", details: "Rinse long-grain white rice (if using). Vermicelli needs no prep." } },
+  { group: 'nodes', data: { id: "add_starch_to_soup", label: "Add Starch to Soup", type: 'action', parent: "FinishStarch", details: "Stir rinsed rice OR broken vermicelli pasta into the soup." } },
+  { group: 'nodes', data: { id: "simmer_starch_cooked", label: "Simmer until Starch is Cooked", type: 'action', parent: "FinishStarch", details: "Continue simmering, uncovered or partially covered, stirring occasionally, until rice is cooked (15-20 minutes) OR vermicelli is cooked (5-10 minutes)." } },
 
-  { group: 'nodes', data: { id: "final_stir", label: "Final Stir", full_label: "Give the soup a final stir.", type: 'action', parent: "Serve", details: "Give the soup a final stir." } },
-  { group: 'nodes', data: { id: "ladle_soup", label: "Ladle Soup", full_label: "Ladle hot Harira soup into bowls.", type: 'action', parent: "Serve", details: "Ladle hot Harira soup into bowls." } },
-  { group: 'nodes', data: { id: "serve_with_lemon", label: "Serve w/ Lemon", full_label: "Serve immediately with lemon wedges.", type: 'action', parent: "Serve", details: "Serve immediately with lemon wedges on the side." } },
+  { group: 'nodes', data: { id: "final_stir", label: "Final Stir", type: 'action', parent: "Serve", details: "Give the soup a final stir." } },
+  { group: 'nodes', data: { id: "ladle_soup", label: "Ladle Soup", type: 'action', parent: "Serve", details: "Ladle hot Harira soup into bowls." } },
+  { group: 'nodes', data: { id: "serve_with_lemon", label: "Serve with Lemon", type: 'action', parent: "Serve", details: "Serve immediately with lemon wedges on the side." } },
 
   // Edges
   { group: 'edges', data: { id: 'e_onion_prep', source: 'onion', target: 'prep_veg_spices', type: 'material' } },
@@ -770,22 +771,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
  cy.on('tap', 'node', function(evt){
   const node = evt.target;
-  let title = node.data('full_label') || node.data('label');
+  let title = node.data('label'); // Use label as the primary title
   let detailText = "";
 
   if (node.data('type') === 'ingredient') {
-   detailText = `Ingredient: ${node.data('full_label') || node.data('label')}`;
+   detailText = `Ingredient: ${node.data('label')}`; // Ingredient details are in the label
   } else if (node.data('type') === 'action') {
-   detailText = `Step: ${node.data('details') || node.data('full_label') || "No specific details for this step."}`;
+   detailText = `Step Details: ${node.data('details') || "No specific details for this step."}`;
   } else if (node.data('type') === 'section') {
-   detailText = `Section: ${node.data('full_label') || node.data('label')}. Click node or cue to expand/collapse child steps.`;
+   detailText = `Section: ${node.data('label')}. Click node or cue to expand/collapse child steps.`;
   }
 
   if (nodeDetailsDisplayEl) {
-    if (title) {
-      nodeDetailsDisplayEl.innerHTML = `<h3>${title.replace(/"/g, '&quot;')}</h3><p>${detailText.replace(/\n/g, '<br>')}</p>`;
-    } else {
-      nodeDetailsDisplayEl.innerHTML = `<p class="hint">Details for this node not found.</p>`;
+    // Use node.data('label') for the title, as full_label is removed
+    // The 'details' field for action nodes will provide the comprehensive text
+    let displayTitle = node.data('label');
+    if (node.data('type') === 'action' && node.data('details')) {
+      // For action nodes, the title is the concise label, details are separate
+      nodeDetailsDisplayEl.innerHTML = `<h3>${displayTitle.replace(/"/g, '&quot;')}</h3><p>${detailText.replace(/\n/g, '<br>')}</p>`;
+    } else { // For ingredients and sections, the label itself is the main info
+      nodeDetailsDisplayEl.innerHTML = `<h3>${displayTitle.replace(/"/g, '&quot;')}</h3><p>${detailText.replace(/\n/g, '<br>')}</p>`;
     }
   }
  });
