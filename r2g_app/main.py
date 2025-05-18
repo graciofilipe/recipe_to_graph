@@ -216,115 +216,71 @@ def text_to_graph(standardised_recipe: str, recipe_name: str, gcs_bucket_name: s
         # Or handle this more gracefully depending on requirements
         raise RuntimeError("HTML content could not be parsed from improved_graph_code.")
 
-    # --- Define Local Filenames ---
-    # base_filename = f"{recipe_name}_{today_str}" # Not needed for static names
-    html_filename = "index.html"
-    css_filename = "style.css"
-    js_filename = "script.js"
-
-    html_file_path = Path(html_filename)
-    css_file_path = Path(css_filename)
-    js_file_path = Path(js_filename)
-
-    # --- Write Content to Local Files ---
-    try:
-        with open(html_file_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        print(f"Successfully wrote HTML to {html_file_path}")
-
-        if css_content: # Only write if CSS content exists
-            with open(css_file_path, "w", encoding="utf-8") as f:
-                f.write(css_content)
-            print(f"Successfully wrote CSS to {css_file_path}")
-        else:
-            # Use static filename in log message
-            print(f"No CSS content to write for style.css")
-
-
-        if js_content: # Only write if JS content exists
-            with open(js_file_path, "w", encoding="utf-8") as f:
-                f.write(js_content)
-            print(f"Successfully wrote JavaScript to {js_file_path}")
-        else:
-            # Use static filename in log message
-            print(f"No JavaScript content to write for script.js")
-
-    except IOError as e:
-        raise RuntimeError(f"Failed to write graph content to local files: {e}") from e
-
-    # --- Upload HTML, CSS, JS to GCS ---
+    # --- Upload HTML, CSS, JS directly to GCS ---
     html_gcs_uri = None
     css_gcs_uri = None
     js_gcs_uri = None
 
     try:
-        # Upload HTML file
-        if html_file_path.exists():
-            html_destination_blob_name = f"{gcs_destination_directory}/index.html" # Static filename
-            upload_to_gcs(gcs_bucket_name, str(html_file_path), html_destination_blob_name)
-            html_gcs_uri = f"gs://{gcs_bucket_name}/{html_destination_blob_name}"
-            print(f"Successfully uploaded HTML to {html_gcs_uri}")
-        else:
-            print(f"HTML file {html_file_path} not found for upload.")
+        # Upload HTML content string
+        html_destination_blob_name = f"{gcs_destination_directory}/index.html"
+        print(f"Uploading HTML content directly to gs://{gcs_bucket_name}/{html_destination_blob_name}")
+        upload_to_gcs(
+            bucket_name=gcs_bucket_name,
+            destination_blob_name=html_destination_blob_name,
+            source_content_string=html_content,
+            content_type='text/html; charset=utf-8'
+        )
+        html_gcs_uri = f"gs://{gcs_bucket_name}/{html_destination_blob_name}"
+        print(f"Successfully uploaded HTML to {html_gcs_uri}")
 
-        # Upload CSS file if it exists
-        if css_content and css_file_path.exists():
-            css_destination_blob_name = f"{gcs_destination_directory}/style.css" # Static filename
-            upload_to_gcs(gcs_bucket_name, str(css_file_path), css_destination_blob_name)
+        # Upload CSS content string if it exists
+        if css_content:
+            css_destination_blob_name = f"{gcs_destination_directory}/style.css"
+            print(f"Uploading CSS content directly to gs://{gcs_bucket_name}/{css_destination_blob_name}")
+            upload_to_gcs(
+                bucket_name=gcs_bucket_name,
+                destination_blob_name=css_destination_blob_name,
+                source_content_string=css_content,
+                content_type='text/css; charset=utf-8'
+            )
             css_gcs_uri = f"gs://{gcs_bucket_name}/{css_destination_blob_name}"
             print(f"Successfully uploaded CSS to {css_gcs_uri}")
-        elif css_content:
-            print(f"CSS file {css_file_path} not found for upload, though CSS content exists.")
         else:
-            # Use static filename in log message
-            print(f"No CSS content to upload for style.css")
+            print("No CSS content to upload.")
 
-        # Upload JS file if it exists
-        if js_content and js_file_path.exists():
-            js_destination_blob_name = f"{gcs_destination_directory}/script.js" # Static filename
-            upload_to_gcs(gcs_bucket_name, str(js_file_path), js_destination_blob_name)
+        # Upload JS content string if it exists
+        if js_content:
+            js_destination_blob_name = f"{gcs_destination_directory}/script.js"
+            print(f"Uploading JS content directly to gs://{gcs_bucket_name}/{js_destination_blob_name}")
+            upload_to_gcs(
+                bucket_name=gcs_bucket_name,
+                destination_blob_name=js_destination_blob_name,
+                source_content_string=js_content,
+                content_type='application/javascript; charset=utf-8'
+            )
             js_gcs_uri = f"gs://{gcs_bucket_name}/{js_destination_blob_name}"
             print(f"Successfully uploaded JS to {js_gcs_uri}")
-        elif js_content:
-            print(f"JS file {js_file_path} not found for upload, though JS content exists.")
         else:
-            # Use static filename in log message
-            print(f"No JavaScript content to upload for script.js")
+            print("No JavaScript content to upload.")
 
     except Exception as e:
         # Consider how to handle partial uploads. For now, raise an error.
-        raise RuntimeError(f"Failed to upload graph files to GCS: {e}") from e
-
-    # --- Cleanup Logic ---
-    # Local files can be cleaned up after successful upload.
-    # This cleanup should ideally be in a finally block to ensure execution
-    # even if GCS upload fails, but that might remove files needed for retry.
-    # For now, let's assume successful upload means we can remove them.
-    files_to_remove = [html_file_path, css_file_path, js_file_path]
-    for file_path in files_to_remove:
-        try:
-            if file_path.exists():
-                os.remove(file_path)
-                print(f"Successfully removed local file: {file_path}")
-        except OSError as e:
-            # Log error but don't let it crash the main process
-            print(f"Error removing local file {file_path}: {e}")
-
+        # This will catch errors from any of the upload_to_gcs calls.
+        raise RuntimeError(f"Failed to upload graph content directly to GCS: {e}") from e
 
     # --- Return Values ---
     if not standardized_recipe_gcs_uri:
          raise RuntimeError("Standardized recipe GCS URI not found after processing.")
-    if not html_gcs_uri:
-        # HTML is considered essential, so if it's not uploaded, it's an error.
-        raise RuntimeError("HTML file GCS URI not found after processing.")
-
+    if not html_gcs_uri: # HTML is considered essential
+        raise RuntimeError("HTML content GCS URI not found after direct GCS upload.")
 
     return {
         "recipe_uri": standardized_recipe_gcs_uri,
         "html_gcs_uri": html_gcs_uri,
         "css_gcs_uri": css_gcs_uri, # Will be None if no CSS content/upload
         "js_gcs_uri": js_gcs_uri,   # Will be None if no JS content/upload
-        "html_content": html_content, # Still returning content for potential direct use
+        "html_content": html_content,
         "css_content": css_content,
         "js_content": js_content
     }
