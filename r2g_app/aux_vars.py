@@ -219,25 +219,34 @@ Verify HTML, CSS, and JavaScript syntactic correctness.
 
 **Output File Structure:**
 
-Your output *must* be structured as follows:
+Your output *must* be structured *exactly* as follows. This is **CRITICAL** for parsing. Deviations will cause failure.
+*   Each code block *must* start with the language identifier (e.g., `html`, `css`, `javascript`).
+*   This must be immediately followed by `filename="your_filename.ext"` (e.g., `filename="index.html"`, `filename="style.css"`, `filename="script.js"`). Use *double quotes* for the filename.
+*   The language identifier and the `filename` attribute must be on the *same line* as the opening triple backticks.
+*   The code content must start on the *next line* after the opening triple backticks and filename declaration.
+*   The code block must end with triple backticks on their own line.
 
-**Critical for parsing:** Each code block *must* start with the language, followed by `filename="your_filename.ext"`, all within the triple backticks. For example: ` ```html filename="index.html" `.
-
+**Example of Correct Format:**
 ```html filename="index.html"
-<!-- Content for index.html -->
+<!DOCTYPE html>
+<html>
+...
+</html>
 ```
 
 ```css filename="style.css"
-/* Content for style.css */
+/* CSS rules */
+...
 ```
 
 ```javascript filename="script.js"
-// Content for script.js
+// JavaScript code
+...
 ```
 
 **Constraints:**
 
-*  **Output:** *Only* valid, executable HTML, CSS, and JavaScript code for a Cytoscape.js diagram, structured as specified above. Verify syntactic correctness for each language.
+*  **Output:** *Only* valid, executable HTML, CSS, and JavaScript code for a Cytoscape.js diagram, structured *exactly* as specified above. Verify syntactic correctness for each language.
 *  **Failure:** Anything other than correct HTML, CSS, and JavaScript code structured as requested will result in failure.
 *  **Libraries:** Use CDN links for Cytoscape.js and its dependencies. Specifically, `index.html` should include:
   *  Cytoscape.js: `https://unpkg.com/cytoscape/dist/cytoscape.min.js`
@@ -327,6 +336,10 @@ Your output *must* be structured as follows:
       *  Adjust spacing: `nodeSep: 50`, `rankSep: 100`, `edgeSep: 20`, `spacingFactor: 1.1` (example values, adjust for clarity).
     *  Implement node tap functionality to display more details if a details div is present in `index.html`.
     *  If using `cytoscape-expand-collapse`, initialize it on the `cy` instance.
+    *   **Error Handling for Script Loading:**
+        *   In `script.js`, before initializing Cytoscape, check if `cytoscape`, `dagre`, and `cytoscapeDagre` (and `cytoscapeExpandCollapse` if used) are defined (i.e., successfully loaded from CDN).
+        *   If any required library is missing, display a clear error message within the `#cy` div (e.g., "Error: Could not load graph library. Please check your internet connection and try again."). Do not attempt to initialize Cytoscape if dependencies are missing.
+        *   Example check: `if (typeof cytoscape === 'undefined' || typeof dagre === 'undefined' || typeof cytoscapeDagre === 'undefined') { document.getElementById('cy').innerHTML = '<p style="color:red; text-align:center; padding-top: 20px;">Error: Core graph libraries failed to load. Please check your internet connection.</p>'; return; }`
 
 6. **Visual Clarity and Best Practices:**
   *  Cytoscape.js Documentation: [https://js.cytoscape.org/](https://js.cytoscape.org/)
@@ -838,31 +851,44 @@ The target audience are chefs following recipes, so visual clarity, intuitive de
 
 **Output File Structure:**
 
-Your output *must* be structured as follows, providing the complete content for each file, even if a file is unchanged:
+Your output *must* be structured *exactly* as follows. This is **CRITICAL** for parsing. Deviations will cause failure.
+*   Each code block *must* start with the language identifier (e.g., `html`, `css`, `javascript`).
+*   This must be immediately followed by `filename="your_filename.ext"` (e.g., `filename="index.html"`, `filename="style.css"`, `filename="script.js"`). Use *double quotes* for the filename.
+*   The language identifier and the `filename` attribute must be on the *same line* as the opening triple backticks.
+*   The code content must start on the *next line* after the opening triple backticks and filename declaration.
+*   The code block must end with triple backticks on their own line.
 
-**Critical for parsing:** Each code block *must* start with the language, followed by `filename="your_filename.ext"`, all within the triple backticks. For example: ` ```html filename="index.html" `. Ensure this format is strictly followed for all three files.
-
+**Example of Correct Format:**
 ```html filename="index.html"
-<!-- Content for index.html (usually unchanged from Agent-2, but include if modified) -->
+<!DOCTYPE html>
+<html>
+...
+</html>
 ```
 
 ```css filename="style.css"
-/* Refactored content for style.css */
+/* CSS rules */
+...
 ```
 
 ```javascript filename="script.js"
-// Refactored content for script.js (if layout or dynamic styling logic is changed)
+// JavaScript code
+...
 ```
 
 **Constraints:**
 
 *   **Functional Equivalence:** The refined diagram must *represent the same recipe data* (nodes representing ingredients/actions, edges representing dependencies, and compound nodes representing sections) as defined in the input files from Agent-2. Do not alter the recipe's logical flow or the core data of nodes and edges. Focus exclusively on enhancing the visual style and presentation through CSS and potentially JavaScript-driven dynamic styling.
-*   **Output:** Only valid, executable HTML, CSS, and JavaScript code, structured as specified above. Verify syntactic correctness for each language.
+*   **Output:** Only valid, executable HTML, CSS, and JavaScript code, structured *exactly* as specified above. Verify syntactic correctness for each language.
 *   **Modification Focus:**
     *   Primarily refactor `style.css`.
     *   Modify `script.js` for layout adjustments, advanced dynamic styling logic (e.g., adding/modifying classes based on data, using mapper functions in the Cytoscape style property), or refining how `elements` data is used for styling.
     *   **Crucially, ensure the `script.js` output includes the graph data (the `elements` array for Cytoscape.js). This data, originally provided in the input `script.js` from Agent-2, must be preserved or correctly regenerated. It should be correctly defined as a JavaScript variable (e.g., `const graphData = [...]`) or directly within the `cytoscape({ elements: [...] })` initialization, and be available for the Cytoscape instance. This data is essential for rendering the graph and must be within the ```javascript filename="script.js" ... ``` block.**
     *   `index.html` should generally remain unchanged unless minor adjustments are essential for styling (e.g., adding a class to a container, linking a new web font).
+    *   **Error Handling for Script Loading:**
+        *   In `script.js`, before initializing Cytoscape, check if `cytoscape`, `dagre`, and `cytoscapeDagre` (and `cytoscapeExpandCollapse` if used) are defined (i.e., successfully loaded from CDN).
+        *   If any required library is missing, display a clear error message within the `#cy` div (e.g., "Error: Could not load graph library. Please check your internet connection and try again."). Do not attempt to initialize Cytoscape if dependencies are missing.
+        *   This check should be present in your `script.js` output.
 
 **Visual Enhancement Tasks & Style Guide (for `style.css` and `script.js`):**
 
